@@ -1,0 +1,38 @@
+{
+  "name": "fileverse-coordinator",
+  "version": "1.0.0",
+  "description": "Coordinator Service for Fileverse",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon .",
+    "start": "NODE_ENV=production node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "storage",
+    "ipfs"
+  ],
+  "author": "Vijay Krishnavanshi",
+  "license": "ISC",
+  "dependencies": {
+    "@pinata/sdk": "^1.1.26",
+    "aws-sdk": "^2.1209.0",
+    "bunyan": "^1.8.15",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.2",
+    "ethers": "^5.7.0",
+    "express": "^4.18.1",
+    "express-fileupload": "^1.4.0",
+    "express-validation": "^4.1.0",
+    "helmet": "^6.0.0",
+    "mongoose": "^6.5.4",
+    "morgan": "^1.10.0",
+    "node-cache": "^5.1.2",
+    "request": "^2.88.2",
+    "ucans": "^0.10.0",
+    "web3.storage": "^4.4.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.19"
+  }
+}
