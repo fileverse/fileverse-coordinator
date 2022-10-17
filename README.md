@@ -1,3 +1,3 @@
-# Fileverse Storage
+# Fileverse Coordinator
 
-Service to handle upload of file from authorised UCANs
+Service to handle message passing from authorised UCANs
