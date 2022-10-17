@@ -8,7 +8,7 @@ async function process({ _id, contractAddress, invokerAddress }) {
   };
   const message = await Message.findOne(criteria);
   if (!message) {
-    return;
+    return {};
   }
   message.processed = true;
   await message.save();
