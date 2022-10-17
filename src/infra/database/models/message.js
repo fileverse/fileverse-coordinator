@@ -19,8 +19,9 @@ _message.schema = new Schema({
     ],
     required: true,
   },
-  forAddress: { type: String, lowercase: true },
+  forAddress: { type: String, lowercase: true, index: true },
   content: { type: String, required: true },
+  processed: { type: Boolean, default: false },
   timeStamp: { type: Date, required: true, default: Date.now },
 });
 
