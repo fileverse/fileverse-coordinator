@@ -1,4 +1,8 @@
 const mongoose = require('mongoose');
+<<<<<<< HEAD
+=======
+const _message = require('./message');
+>>>>>>> 2af06b057869282315f3d99545c2a5dbcdca2538
 const { Schema } = mongoose;
 
 const _notification = {};
