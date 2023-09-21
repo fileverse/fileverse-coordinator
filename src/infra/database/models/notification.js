@@ -12,12 +12,17 @@ _notification.schema = new Schema({
   forAddress: [{ type: String, lowercase: true, trim: true }],
   audience: {
     type: String,
-    enum: ['collaborators_only', 'members_only', 'individuals'],
+    enum: ['collaborators_only', 'members_only', 'individuals', 'public'],
   },
   content: {
-    type: String,
+    type: Object,
     trim: true,
   },
+  type: {
+    type: String,
+    enum: ['addFile', 'editFile', 'deleteFile', 'portalInvite', 'portalJoin'],
+  },
+  blockTimestamp: { type: Number },
   processed: { type: Boolean, default: false },
   timeStamp: { type: Date, required: true, default: Date.now },
 });
@@ -36,6 +41,8 @@ _notification.schema.methods.safeObject = function () {
     'content',
     'processed',
     'timeStamp',
+    'type',
+    'blockTimestamp',
   ];
   const newSafeObject = {};
   safeFields.forEach((elem) => {
@@ -44,6 +51,11 @@ _notification.schema.methods.safeObject = function () {
   });
   return newSafeObject;
 };
+
+_notification.schema.index(
+  { portalAddress: 1, blockTimestamp: 1, content: 1 },
+  { unique: true },
+);
 
 _notification.model = mongoose.model('notifications', _notification.schema);
 
