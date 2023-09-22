@@ -20,9 +20,18 @@ _notification.schema = new Schema({
   },
   type: {
     type: String,
-    enum: ['addFile', 'editFile', 'deleteFile', 'portalInvite', 'portalJoin'],
+    enum: [
+      'addFile',
+      'editFile',
+      'deleteFile',
+      'collaboratorJoin',
+      'collaboratorInvite',
+      'collaboratorRemove',
+      'memberJoin',
+      'memberRemove',
+    ],
   },
-  blockTimestamp: { type: Number },
+  blockNumber: { type: Number },
   processed: { type: Boolean, default: false },
   timeStamp: { type: Date, required: true, default: Date.now },
 });
@@ -42,7 +51,7 @@ _notification.schema.methods.safeObject = function () {
     'processed',
     'timeStamp',
     'type',
-    'blockTimestamp',
+    'blockNumber',
   ];
   const newSafeObject = {};
   safeFields.forEach((elem) => {
@@ -53,7 +62,7 @@ _notification.schema.methods.safeObject = function () {
 };
 
 _notification.schema.index(
-  { portalAddress: 1, blockTimestamp: 1, content: 1 },
+  { portalAddress: 1, blockNumber: 1, content: 1 },
   { unique: true },
 );
 

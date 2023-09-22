@@ -70,8 +70,6 @@ async function createPortalInviteNotifications() {
 async function createPortalJoinNotifications() {}
 
 async function createFileAddNotifications() {
-  getDataFromIpfs('QmTcWuNWfoNfD3txLgwu2SLuQWXUZHvLtwnUPj9JK6qnXC');
-  return 'hello';
   const apiURL = config.SUBGRAPH_API;
   const eventName = 'addedFiles';
   const notificationType = 'addFile';
