@@ -25,58 +25,60 @@ async function addFileNotifications() {
   const data = addFileData?.data?.data;
   const addedFiles = data[eventName];
 
-  addedFiles.map(async (addFile) => {
-    let audience = '';
-    let forAddress = [];
-    const portal = await Portal.findOne({
-      portalAddress: addFile.portalAddress,
-    });
-    switch (addFile.fileType) {
-      case '0': {
-        // Public
-        audience = 'public';
-        forAddress = portal.members.concat(portal.collaborators);
-        break;
+  await Promise.all(
+    addedFiles.map(async (addFile) => {
+      let audience = '';
+      let forAddress = [];
+      const portal = await Portal.findOne({
+        portalAddress: addFile.portalAddress,
+      });
+      switch (addFile.fileType) {
+        case '0': {
+          // Public
+          audience = 'public';
+          forAddress = portal.members.concat(portal.collaborators);
+          break;
+        }
+        case '1': {
+          // private, collaborators only
+          audience = 'collaborators_only';
+          forAddress = portal.collaborators;
+          break;
+        }
+        case '2': {
+          // gated
+          audience = 'inviduals';
+          forAddress = portal.collaborators.concat(portal.members);
+          break;
+        }
+        case '3': {
+          // members
+          audience = 'members_only';
+          forAddress = portal.members;
+          break;
+        }
+        default: {
+          // FileType not valid
+          return;
+        }
       }
-      case '1': {
-        // private, collaborators only
-        audience = 'collaborators_only';
-        forAddress = portal.collaborators;
-        break;
-      }
-      case '2': {
-        // gated
-        audience = 'inviduals';
-        forAddress = portal.collaborators.concat(portal.members);
-        break;
-      }
-      case '3': {
-        // members
-        audience = 'members_only';
-        forAddress = portal.members;
-        break;
-      }
-      default: {
-        // FileType not valid
-        return;
-      }
-    }
 
-    const notif = new Notification({
-      portalAddress: addFile.portalAddress,
-      audience,
-      forAddress,
-      blockNumber: addFile.blockNumber,
-      type: 'addFile',
-      content: {
-        by: addFile.by,
-        metadataIPFSHash: addFile.metadataIPFSHash,
-        fileType: addFile.fileType,
-      },
-    });
+      const notif = new Notification({
+        portalAddress: addFile.portalAddress,
+        audience,
+        forAddress,
+        blockNumber: addFile.blockNumber,
+        type: 'addFile',
+        content: {
+          by: addFile.by,
+          metadataIPFSHash: addFile.metadataIPFSHash,
+          fileType: addFile.fileType,
+        },
+      });
 
-    await notif.save();
-  });
+      await notif.save();
+    }),
+  );
 
   await EventProcessor.updateOne(
     {},

@@ -64,9 +64,6 @@ async function getInvitedCollaborators() {
     },
     { upsert: true },
   );
-
-  console.log('done all');
-  return 'success';
 }
 
 async function getAddedCollaborators() {
@@ -90,52 +87,54 @@ async function getAddedCollaborators() {
   const data = addedCollabResult?.data?.data;
   const addedCollabs = data[eventName];
 
-  addedCollabs.map(async (addedCollab) => {
-    const portal = await Portal.findOne({
-      portalAddress: addedCollab.portalAddress,
-    });
-    const alreadyAddedCollab = isCollaboratorPresent(
-      portal.collaborators,
-      addedCollab,
-    );
-    if (!alreadyAddedCollab) {
-      await Portal.updateOne(
-        { portalAddress: addedCollab.portalAddress },
-        {
-          $push: {
-            collaborators: {
-              address: addedCollab.account,
-              addedBlocknumber: addedCollab.blockNumber,
+  await Promise.all(
+    addedCollabs.map(async (addedCollab) => {
+      const portal = await Portal.findOne({
+        portalAddress: addedCollab.portalAddress,
+      });
+      const alreadyAddedCollab = isCollaboratorPresent(
+        portal.collaborators,
+        addedCollab,
+      );
+      if (!alreadyAddedCollab) {
+        await Portal.updateOne(
+          { portalAddress: addedCollab.portalAddress },
+          {
+            $push: {
+              collaborators: {
+                address: addedCollab.account,
+                addedBlocknumber: addedCollab.blockNumber,
+              },
             },
           },
-        },
-      );
-    } else {
-      await Portal.updateOne(
-        {
-          portalAddress: addedCollab.portalAddress,
-          'collaborators.address': addedCollab.account,
-        },
-        {
-          $set: {
-            'collaborators.addedBlocknumber': addedCollab.blockNumber,
+        );
+      } else {
+        await Portal.updateOne(
+          {
+            portalAddress: addedCollab.portalAddress,
+            'collaborators.address': addedCollab.account,
           },
-        },
-      );
-    }
+          {
+            $set: {
+              'collaborators.addedBlocknumber': addedCollab.blockNumber,
+            },
+          },
+        );
+      }
 
-    const notification = new Notification({
-      portalAddress: addedCollab.portalAddress,
-      audience: 'individuals',
-      forAddress: addedCollab.account,
-      content: {
-        by: addedCollab.by,
-      },
-      blockNumber: addedCollab.blockNumber,
-      type: 'collaboratorJoined',
-    });
-    notification.save();
-  });
+      const notification = new Notification({
+        portalAddress: addedCollab.portalAddress,
+        audience: 'individuals',
+        forAddress: addedCollab.account,
+        content: {
+          by: addedCollab.by,
+        },
+        blockNumber: addedCollab.blockNumber,
+        type: 'collaboratorJoined',
+      });
+      await notification.save();
+    }),
+  );
 
   await EventProcessor.updateOne(
     {},
@@ -170,52 +169,54 @@ async function getRemovedCollaborators() {
   const data = removedCollabData?.data?.data;
   const removedCollabs = data[eventName];
 
-  removedCollabs.map(async (removedCollab) => {
-    const portal = await Portal.findOne({
-      portalAddress: removedCollab.portalAddress,
-    });
-    const alreadyRemovedCollab = isCollaboratorPresent(
-      portal.collaborators,
-      removedCollab,
-    );
-    if (!alreadyRemovedCollab) {
-      await Portal.updateOne(
-        { portalAddress: removedCollab.portalAddress },
-        {
-          $push: {
-            collaborators: {
-              address: removedCollab.account,
-              removedBlocknumber: removedCollab.blockNumber,
+  await Promise.all(
+    removedCollabs.map(async (removedCollab) => {
+      const portal = await Portal.findOne({
+        portalAddress: removedCollab.portalAddress,
+      });
+      const alreadyRemovedCollab = isCollaboratorPresent(
+        portal.collaborators,
+        removedCollab,
+      );
+      if (!alreadyRemovedCollab) {
+        await Portal.updateOne(
+          { portalAddress: removedCollab.portalAddress },
+          {
+            $push: {
+              collaborators: {
+                address: removedCollab.account,
+                removedBlocknumber: removedCollab.blockNumber,
+              },
             },
           },
-        },
-      );
-    } else {
-      await Portal.updateOne(
-        {
-          portalAddress: removedCollab.portalAddress,
-          'collaborators.address': removedCollab.account,
-        },
-        {
-          $set: {
-            'collaborators.removedBlocknumber': removedCollab.blocknumber,
+        );
+      } else {
+        await Portal.updateOne(
+          {
+            portalAddress: removedCollab.portalAddress,
+            'collaborators.address': removedCollab.account,
           },
-        },
-      );
-    }
+          {
+            $set: {
+              'collaborators.removedBlocknumber': removedCollab.blocknumber,
+            },
+          },
+        );
+      }
 
-    const notification = new Notification({
-      portalAddress: removedCollab.portalAddress,
-      audience: 'individuals',
-      forAddress: removedCollab.account,
-      content: {
-        by: removedCollab.by,
-      },
-      blockNumber: removedCollab.blockNumber,
-      type: 'collaboratorRemoved',
-    });
-    notification.save();
-  });
+      const notification = new Notification({
+        portalAddress: removedCollab.portalAddress,
+        audience: 'individuals',
+        forAddress: removedCollab.account,
+        content: {
+          by: removedCollab.by,
+        },
+        blockNumber: removedCollab.blockNumber,
+        type: 'collaboratorRemoved',
+      });
+      await notification.save();
+    }),
+  );
 
   await EventProcessor.updateOne(
     {},
