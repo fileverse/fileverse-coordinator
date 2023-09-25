@@ -18,6 +18,7 @@ _notification.schema = new Schema({
     type: Object,
     trim: true,
   },
+  message: { type: String, trim: true },
   type: {
     type: String,
     enum: [

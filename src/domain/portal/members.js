@@ -5,6 +5,7 @@ const {
 } = require('../../infra/database/models');
 const config = require('../../../config');
 const axios = require('axios');
+const getPortalDetailsFromAddress = require('./getPortalDetails');
 
 const apiURL = config.SUBGRAPH_API;
 
@@ -71,12 +72,17 @@ async function getAddedMembers() {
         );
       }
 
+      const portalDetails = await getPortalDetailsFromAddress();
+
       const notification = new Notification({
         portalAddress: addedMember.portalAddress,
         forAddress: portal.members,
         audience: 'members_only',
-        forAddress: addedMember.account,
+        content: {
+          portalLogo: portalDetails.logo,
+        },
         blockNumber: addedMember.blockNumber,
+        message: `${addedMember.account} has joined the portal ${portalDetails.name} as member.`,
         type: 'memberJoin',
       });
       await notification.save();

@@ -5,6 +5,7 @@ const {
 } = require('../../infra/database/models');
 const config = require('../../../config');
 const axios = require('axios');
+const getPortalDetailsFromAddress = require('./getPortalDetails');
 
 const apiURL = config.SUBGRAPH_API;
 
@@ -40,14 +41,19 @@ async function getInvitedCollaborators() {
 
   await Promise.all(
     invitedCollabs.map(async (invitedCollab) => {
+      const portalDetails = await getPortalDetailsFromAddress(
+        invitedCollab.portalAddress,
+      );
       const notif = new Notification({
         portalAddress: invitedCollab.portalAddress,
         content: {
           by: invitedCollab.by,
+          portalLogo: portalDetails.logo,
         },
         blockNumber: invitedCollab.blockNumber,
         type: 'collaboratorInvite',
         audience: 'individuals',
+        message: `${invitedCollab.by} invited you to become a collaborator of the portal ${portalDetails.name}`,
         forAddress: [invitedCollab.account],
       });
       await notif.save();
@@ -110,7 +116,7 @@ async function getAddedCollaborators() {
         const notification = new Notification({
           portalAddress: addedCollab.portalAddress,
           audience: 'individuals',
-          forAddress: addedCollab.account,
+          forAddress: [addedCollab.account],
           content: {
             by: addedCollab.by,
           },
@@ -202,15 +208,18 @@ async function getRemovedCollaborators() {
           { upsert: true },
         );
       }
-
+      const portalDetails = await getPortalDetailsFromAddress(
+        removedCollab.portalAddress,
+      );
       const notification = new Notification({
         portalAddress: removedCollab.portalAddress,
         audience: 'individuals',
-        forAddress: removedCollab.account,
+        forAddress: [removedCollab.account],
         content: {
           by: removedCollab.by,
           account: removedCollab.account,
         },
+        message: `You were removed from portal ${portalDetails.name} by ${removedCollab.by}`,
         blockNumber: removedCollab.blockNumber,
         type: 'collaboratorRemove',
       });
