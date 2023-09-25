@@ -92,10 +92,8 @@ async function getAddedCollaborators() {
       const portal = await Portal.findOne({
         portalAddress: addedCollab.portalAddress,
       });
-      const alreadyAddedCollab = isCollaboratorPresent(
-        portal.collaborators,
-        addedCollab,
-      );
+      const alreadyAddedCollab =
+        portal && isCollaboratorPresent(portal.collaborators, addedCollab);
       if (!alreadyAddedCollab) {
         await Portal.updateOne(
           { portalAddress: addedCollab.portalAddress },
@@ -107,7 +105,19 @@ async function getAddedCollaborators() {
               },
             },
           },
+          { upsert: true },
         );
+        const notification = new Notification({
+          portalAddress: addedCollab.portalAddress,
+          audience: 'individuals',
+          forAddress: addedCollab.account,
+          content: {
+            by: addedCollab.by,
+          },
+          blockNumber: addedCollab.blockNumber,
+          type: 'collaboratorJoined',
+        });
+        await notification.save();
       } else {
         await Portal.updateOne(
           {
@@ -119,20 +129,9 @@ async function getAddedCollaborators() {
               'collaborators.addedBlocknumber': addedCollab.blockNumber,
             },
           },
+          { upsert: true },
         );
       }
-
-      const notification = new Notification({
-        portalAddress: addedCollab.portalAddress,
-        audience: 'individuals',
-        forAddress: addedCollab.account,
-        content: {
-          by: addedCollab.by,
-        },
-        blockNumber: addedCollab.blockNumber,
-        type: 'collaboratorJoined',
-      });
-      await notification.save();
     }),
   );
 
@@ -174,10 +173,8 @@ async function getRemovedCollaborators() {
       const portal = await Portal.findOne({
         portalAddress: removedCollab.portalAddress,
       });
-      const alreadyRemovedCollab = isCollaboratorPresent(
-        portal.collaborators,
-        removedCollab,
-      );
+      const alreadyRemovedCollab =
+        portal && isCollaboratorPresent(portal.collaborators, removedCollab);
       if (!alreadyRemovedCollab) {
         await Portal.updateOne(
           { portalAddress: removedCollab.portalAddress },
@@ -189,6 +186,7 @@ async function getRemovedCollaborators() {
               },
             },
           },
+          { upsert: true },
         );
       } else {
         await Portal.updateOne(
@@ -201,6 +199,7 @@ async function getRemovedCollaborators() {
               'collaborators.removedBlocknumber': removedCollab.blocknumber,
             },
           },
+          { upsert: true },
         );
       }
 
@@ -210,9 +209,10 @@ async function getRemovedCollaborators() {
         forAddress: removedCollab.account,
         content: {
           by: removedCollab.by,
+          account: removedCollab.account,
         },
         blockNumber: removedCollab.blockNumber,
-        type: 'collaboratorRemoved',
+        type: 'collaboratorRemove',
       });
       await notification.save();
     }),
@@ -226,6 +226,7 @@ async function getRemovedCollaborators() {
           removedCollabEventsProcessed + removedCollabs.length,
       },
     },
+    { upsert: true },
   );
 
   return removedCollabs;

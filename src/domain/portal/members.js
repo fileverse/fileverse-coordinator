@@ -54,6 +54,7 @@ async function getAddedMembers() {
               },
             },
           },
+          { upsert: true },
         );
       } else {
         await Portal.updateOne(
@@ -66,6 +67,7 @@ async function getAddedMembers() {
               'members.addedBlocknumber': addedMember.blockNumber,
             },
           },
+          { upsert: true },
         );
       }
 
@@ -88,6 +90,7 @@ async function getAddedMembers() {
         addMember: addedMembersEventProcessed + addedMembers.length,
       },
     },
+    { upsert: true },
   );
 
   return addedMembers;
@@ -133,6 +136,7 @@ async function getRemovedMembers() {
               },
             },
           },
+          { upsert: true },
         );
       } else {
         await Portal.updateOne(
@@ -145,6 +149,7 @@ async function getRemovedMembers() {
               'members.removedBlocknumber': removedMember.blocknumber,
             },
           },
+          { upsert: true },
         );
       }
 
@@ -166,6 +171,7 @@ async function getRemovedMembers() {
         removeMember: removedMemberEventProcessed + removedMembers.length,
       },
     },
+    { upsert: true },
   );
 
   return removedMembers;

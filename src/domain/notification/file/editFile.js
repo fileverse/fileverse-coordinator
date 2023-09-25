@@ -87,6 +87,7 @@ async function editFileNotifications() {
         editFile: editedFileEventsProcessed + editedFiles.length,
       },
     },
+    { upsert: true },
   );
 }
 

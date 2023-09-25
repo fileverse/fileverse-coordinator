@@ -1,5 +1,6 @@
 const { EventProcessor, Portal } = require('./../../../infra/database/models');
 const config = require('./../../../../config');
+const axios = require('axios');
 
 const apiURL = config.SUBGRAPH_API;
 
@@ -10,9 +11,10 @@ async function addFileNotifications() {
   if (eventProcessed) {
     addedFileEventsProcessed = eventProcessed.addFile;
   }
-  const addFileData = await axios.get(apiURL, {
+
+  const addFileData = await axios.post(apiURL, {
     query: `{
-      ${eventName}(first : 100, skip: 0, orderDirection: asc, orderBy: blockNumber) {
+      ${eventName}(first : 100, skip: ${addedFileEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
         fileType,
         metadataIPFSHash,
         blockNumber,
@@ -32,6 +34,11 @@ async function addFileNotifications() {
       const portal = await Portal.findOne({
         portalAddress: addFile.portalAddress,
       });
+      if (!portal) {
+        console.log('portal', addFile.portalAddress);
+      } else {
+        console.log({ portal });
+      }
       switch (addFile.fileType) {
         case '0': {
           // Public
@@ -47,7 +54,7 @@ async function addFileNotifications() {
         }
         case '2': {
           // gated
-          audience = 'inviduals';
+          audience = 'individuals';
           forAddress = portal.collaborators.concat(portal.members);
           break;
         }
@@ -87,6 +94,7 @@ async function addFileNotifications() {
         addFile: addedFileEventsProcessed + addedFiles.length,
       },
     },
+    { upsert: true },
   );
 }
 
