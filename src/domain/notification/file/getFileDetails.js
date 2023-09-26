@@ -1,4 +1,6 @@
-async function getFileDetails(portal, fileType) {
+const axios = require('axios');
+
+async function getFileDetails({ portal, fileTypeNumber, metadataIPFSHash }) {
   let membersAndCollabs = [];
   if (portal.members)
     membersAndCollabs = membersAndCollabs.concat(portal.members);
@@ -6,28 +8,33 @@ async function getFileDetails(portal, fileType) {
     membersAndCollabs = membersAndCollabs.concat(portal.members);
   let audience = '';
   let forAddress = [];
-  switch (fileType) {
+  let fileType = '';
+  switch (fileTypeNumber) {
     case '0': {
       // Public
       audience = 'public';
+      fileType = 'public';
       forAddress = membersAndCollabs;
       break;
     }
     case '1': {
       // private, collaborators only
       audience = 'collaborators_only';
+      fileType = 'private';
       forAddress = portal.collaborators;
       break;
     }
     case '2': {
       // gated
       audience = 'individuals';
+      fileType = 'gated';
       forAddress = portal.membersAndCollabs;
       break;
     }
     case '3': {
       // members
       audience = 'members_only';
+      fileType = 'members only';
       forAddress = portal.members;
       break;
     }
@@ -36,9 +43,19 @@ async function getFileDetails(portal, fileType) {
       return;
     }
   }
+
+  const result = await axios.get('https://dweb.link/ipfs/' + metadataIPFSHash);
+  const metadata = result?.data;
+
   return {
     audience,
     forAddress,
+    fileType,
+    metadata: {
+      name: metadata.name,
+      mimeType: metadata.mimeType,
+      owner: metadata.owner,
+    },
   };
 }
 

@@ -7,6 +7,8 @@ const {
   Portal,
   Notification,
 } = require('../../../infra/database/models');
+const getPortalDetailsFromAddress = require('../../../domain/portal/getPortalDetails');
+const getFileDetails = require('../../../domain/notification/file/getFileDetails');
 
 const apiURL = config.SUBGRAPH_API;
 
@@ -38,7 +40,14 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
           portalAddress: addFile.portalAddress,
         });
 
-        const fileDetails = await getFileDetails(portal, addFile.fileType);
+        const fileDetails = await getFileDetails({
+          portal,
+          fileTypeNumber: addFile.fileType,
+          metadataIPFSHash,
+        });
+        const portalDetails = await getPortalDetailsFromAddress(
+          addFile.portalAddress,
+        );
 
         const notif = new Notification({
           portalAddress: addFile.portalAddress,
@@ -46,6 +55,7 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
           forAddress: fileDetails.forAddress,
           blockNumber: addFile.blockNumber,
           type: 'addFile',
+          message: `${addFile.by} added ${fileDetails.fileType} file - ${fileDetails.metadata.name} in portal ${portalDetails.name}`,
           content: {
             by: addFile.by,
             metadataIPFSHash: addFile.metadataIPFSHash,
