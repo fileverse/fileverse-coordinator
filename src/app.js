@@ -9,12 +9,16 @@ const express = require('express');
 const logger = require('morgan');
 const cors = require('cors');
 const helmet = require('helmet');
+const basicAuth = require('express-basic-auth');
+const Agendash = require('agendash');
 
 const router = require('./interface');
 const { errorHandler } = require('./interface/middleware');
 const { asyncHandler } = require('./infra/asyncHandler');
 const ucan = require('./infra/ucan');
-// const cron = require('./cron');
+const config = require('./../config');
+const agenda = require('./interface/cron');
+
 // Express App
 const app = express();
 
@@ -32,6 +36,17 @@ app.use(
     contentSecurityPolicy: false,
     frameguard: false,
   }),
+);
+
+app.use(
+  '/dash',
+  basicAuth({
+    users: {
+      admin: config.AGENDA_CRON_PASSWORD,
+    },
+    challenge: true,
+  }),
+  Agendash(agenda),
 );
 
 app.use(asyncHandler(ucan.verify));

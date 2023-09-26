@@ -34,11 +34,6 @@ async function addFileNotifications() {
       const portal = await Portal.findOne({
         portalAddress: addFile.portalAddress,
       });
-      if (!portal) {
-        console.log('portal', addFile.portalAddress);
-      } else {
-        console.log({ portal });
-      }
       switch (addFile.fileType) {
         case '0': {
           // Public

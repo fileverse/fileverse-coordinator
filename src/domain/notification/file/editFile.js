@@ -1,5 +1,6 @@
 const { EventProcessor, Portal } = require('./../../../infra/database/models');
 const config = require('./../../../../config');
+const axios = require('axios');
 
 const apiURL = config.SUBGRAPH_API;
 
