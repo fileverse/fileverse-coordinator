@@ -1,6 +1,6 @@
 const config = require('../../../../config');
 const getPortalDetailsFromAddress = require('../../../domain/portal/getPortalDetails');
-const isCollaboratorPresent = require('../../../domain/portal/isCollaboratorPresent');
+const isAccountPresent = require('../../../domain/portal/isAccountPresent');
 const {
   EventProcessor,
   Notification,
@@ -40,7 +40,7 @@ agenda.define(jobs.ADDED_COLLABORATOR_JOB, async (job, done) => {
           portalAddress: addedCollab.portalAddress,
         });
         const alreadyAddedCollab =
-          portal && isCollaboratorPresent(portal.collaborators, addedCollab);
+          portal && isAccountPresent(portal.collaborators, addedCollab);
         if (!alreadyAddedCollab) {
           await Portal.updateOne(
             { portalAddress: addedCollab.portalAddress },

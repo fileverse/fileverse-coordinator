@@ -1,4 +1,4 @@
-function isCollaboratorPresent(collaborators, addedCollaborator) {
+function isAccountPresent(collaborators, addedCollaborator) {
   collaborators.map((collaborator) => {
     if ((collaborator.addresss = addedCollaborator.account)) {
       return collaborator;
@@ -7,4 +7,4 @@ function isCollaboratorPresent(collaborators, addedCollaborator) {
   return null;
 }
 
-module.exports = isCollaboratorPresent;
+module.exports = isAccountPresent;

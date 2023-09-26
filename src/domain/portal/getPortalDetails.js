@@ -11,8 +11,8 @@ async function getPortalDetailsFromAddress(portalAddress) {
   const result = await axios.get('https://ipfs.io/ipfs/' + metadataIPFSHash);
   const metadata = result?.data;
   return {
-    name: metadata.name,
-    logo: metadata.logo,
+    name: metadata?.name,
+    logo: metadata?.logo,
   };
 }
 
