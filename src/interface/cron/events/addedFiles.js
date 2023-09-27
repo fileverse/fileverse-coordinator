@@ -60,6 +60,7 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
             by: addFile.by,
             metadataIPFSHash: addFile.metadataIPFSHash,
             fileType: addFile.fileType,
+            fileMetadata: fileDetails.metadata,
           },
         });
 

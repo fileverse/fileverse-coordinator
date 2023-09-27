@@ -60,8 +60,17 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
             by: editFile.by,
             metadataIPFSHash: editFile.metadataIPFSHash,
             fileType: editFile.fileType,
+            fileMetadata: fileDetails.metadata,
           },
         });
+
+        if (
+          editFile?.metadataIPFSHash ===
+          'bafybeify3xbts44jrrcidno7gxqs5fyvf5rbx3zkncnbjaibejjetvqtqe/metadata'
+        ) {
+          notif.type = 'deleteFile';
+          notif.message = `${editFile.by} deleted the file - ${fileDetails.metadata.name} from portal ${portalDetails.name}`;
+        }
 
         await notif.save();
       }),
