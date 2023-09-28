@@ -19,7 +19,7 @@ async function get(req, res) {
     portalAddress: portalAddress.toLowerCase(),
     offset,
     limit,
-    read: isRead,
+    read: isRead === 'true' ? true : false,
   });
   res.json(notifications);
 }
