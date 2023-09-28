@@ -11,11 +11,21 @@ async function get({ address, read, offset, limit, portalAddress }) {
   if (portalAddress) {
     matchQuery.portalAddress = portalAddress;
   }
+  if (read) {
+    matchQuery.processed = true;
+  }
 
   const notifications = await Notification.find(matchQuery)
     .sort({ blockNumber: -1 })
     .skip(offset)
     .limit(limit);
+
+  notifications.forEach((notification, index) => {
+    if (notification.message.contains(address)) {
+      notification.message.replace(addresss, 'you');
+      notifications[index] = notification;
+    }
+  });
 
   return notifications;
 }
