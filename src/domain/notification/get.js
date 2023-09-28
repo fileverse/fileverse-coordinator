@@ -16,7 +16,7 @@ async function get({ address, read, offset, limit, portalAddress }) {
   }
 
   const notifications = await Notification.find(matchQuery)
-    .sort({ blockNumber: -1 })
+    .sort({ timeStamp: -1, blockNumber: -1 })
     .skip(offset)
     .limit(limit);
 
