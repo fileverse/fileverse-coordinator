@@ -13,17 +13,19 @@ async function graceful() {
 
     await agenda.start();
     // console.log(await agenda.jobs());
-    require('./interface/cron/events/addedCollaborators');
-    require('./interface/cron/events/addedFiles');
-    require('./interface/cron/events/addedMembers');
-    require('./interface/cron/events/editedFiles');
+    // require('./interface/cron/events/addedCollaborators');
+    // require('./interface/cron/events/addedFiles');
+    // require('./interface/cron/events/addedMembers');
+    // require('./interface/cron/events/editedFiles');
     require('./interface/cron/events/invitedCollaborators');
-    require('./interface/cron/events/removedMembers');
-    require('./interface/cron/events/removedCollaborators');
+    // require('./interface/cron/events/removedMembers');
+    // require('./interface/cron/events/removedCollaborators');
 
-    Object.keys(jobs).map(async (job) => {
-      await agenda.every('* * * * *', job);
-    });
+    await agenda.every('* * * * *', jobs.INVITED_COLLABORATOR_JOB);
+
+    // Object.keys(jobs).map(async (job) => {
+    //   await agenda.every('* * * * *', job);
+    // });
   } catch (err) {
     console.log(err.stack);
     await graceful();
