@@ -20,9 +20,9 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
     if (eventProcessed) {
       editedFileEventsProcessed = eventProcessed.editFile;
     }
-    const editFileData = await axios.get(apiURL, {
+    const editFileData = await axios.post(apiURL, {
       query: `{
-      ${eventName}(first : 10, skip: 0, orderDirection: asc, orderBy: blockNumber) {
+      ${eventName}(first : 10, skip: ${editedFileEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
         fileType,
         metadataIPFSHash,
         blockNumber,
@@ -34,7 +34,10 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
     });
 
     const data = editFileData?.data?.data;
+
     const editedFiles = data[eventName];
+
+    console.log('Recieved entries', jobs.EDITED_FILE_JOB, editedFiles.length);
 
     await Promise.all(
       editedFiles.map(async (editFile) => {
@@ -44,10 +47,10 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
         const fileDetails = await getFileDetails({
           portal,
           fileTypeNumber: editFile.fileType,
-          metadataIPFSHash,
+          metadataIPFSHash: editFile.metadataIPFSHash,
         });
         const portalDetails = await getPortalDetailsFromAddress(
-          editFile.portalAddress,
+          editFile.portalMetadataIPFSHash,
         );
 
         const notif = new Notification({
@@ -56,7 +59,11 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
           forAddress: fileDetails.forAddress,
           blockNumber: editFile.blockNumber,
           type: 'editFile',
-          message: `${editFile.by} edited the file - ${fileDetails.metadata.name} in portal ${portalDetails.name}`,
+          message: `${editFile.by} edited the file  ${
+            fileDetails.metadata ? fileDetails.metadata.name : ''
+          } in portal ${
+            portalDetails ? portalDetails.name : editFile.portalAddress
+          }`,
           content: {
             by: editFile.by,
             metadataIPFSHash: editFile.metadataIPFSHash,
@@ -70,7 +77,11 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
           'bafybeify3xbts44jrrcidno7gxqs5fyvf5rbx3zkncnbjaibejjetvqtqe/metadata'
         ) {
           notif.type = 'deleteFile';
-          notif.message = `${editFile.by} deleted the file - ${fileDetails.metadata.name} from portal ${portalDetails.name}`;
+          notif.message = `${editFile.by} deleted the file - ${
+            fileDetails.metadata ? fileDetails.metadata.name : ''
+          } from portal ${
+            portalDetails ? portalDetails.name : editFile.portalAddress
+          }`;
         }
 
         await notif.save();
@@ -90,5 +101,7 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
   } catch (err) {
     console.error('error during job', jobs.EDITED_FILE_JOB, err);
     done(err);
+  } finally {
+    console.log('Done job', jobs.EDITED_FILE_JOB);
   }
 });

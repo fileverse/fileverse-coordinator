@@ -48,14 +48,14 @@ async function createNotificationForAddCollaborator(addedCollab) {
     blockNumber: addedCollab.blockNumber,
     type: 'collaboratorJoin',
   });
-  try {
-    const portalDetails = await getPortalDetails(
-      addedCollab.portalMetadataIPFSHash,
-    );
+
+  const portalDetails = await getPortalDetails(
+    addedCollab.portalMetadataIPFSHash,
+  );
+  if (portalDetails) {
     notification.message = `${addedCollab.account} joined the portal ${portalDetails.name}`;
     notification.content.portalLogo = portalDetails.logo;
-  } catch (err) {
-    console.error('error in getting portal details', err);
+  } else {
     notification.message = `${addedCollab.account} joined the portal ${addedCollab.portalAddress}`;
   }
   await notification.save();

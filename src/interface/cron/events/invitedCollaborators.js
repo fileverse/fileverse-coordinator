@@ -44,14 +44,13 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
           audience: 'individuals',
           forAddress: [invitedCollab.account],
         });
-        try {
-          const portalDetails = await getPortalDetailsFromAddress(
-            invitedCollab.portalAddress,
-          );
+        const portalDetails = await getPortalDetailsFromAddress(
+          invitedCollab.portalAddress,
+        );
+        if (portalDetails) {
           notif.message = `${invitedCollab.by} invited you to become a collaborator of the portal ${portalDetails.name}`;
           notif.content.portalLogo = portalDetails.logo;
-        } catch (err) {
-          console.error('err during getting portal details', err);
+        } else {
           notif.message = `${invitedCollab.by} invited you to become a collaborator of the portal ${invitedCollab.portalAddress}`;
         }
         await notif.save();

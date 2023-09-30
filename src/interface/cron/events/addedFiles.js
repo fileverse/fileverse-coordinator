@@ -65,12 +65,8 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
           metadataIPFSHash: addFile.metadataIPFSHash,
         });
 
-        let portalDetails = null;
-        try {
-          portalDetails = await getPortalDetailsFromAddress(
-            addFile.portalMetadataIPFSHash,
-          );
-        } catch (err) {}
+        const portalDetails = (portalDetails =
+          await getPortalDetailsFromAddress(addFile.portalMetadataIPFSHash));
 
         const notif = new Notification({
           portalAddress: addFile.portalAddress,
