@@ -1,5 +1,6 @@
 const config = require('../../../../config');
 const getPortalDetailsFromAddress = require('../../../domain/portal/getPortalDetails');
+const isAccountPresent = require('../../../domain/portal/isAccountPresent');
 const {
   EventProcessor,
   Notification,
@@ -21,7 +22,7 @@ agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
     const eventName = 'removedCollaborators';
     const removedCollabData = await axios.post(apiURL, {
       query: `{
-    ${eventName}(first: 100, skip: ${removedCollabEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
+    ${eventName}(first: 10, skip: ${removedCollabEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
       portalAddress,
       by,
       blockNumber,
@@ -39,7 +40,8 @@ agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
           portalAddress: removedCollab.portalAddress,
         });
         const alreadyRemovedCollab =
-          portal && isCollaboratorPresent(portal.collaborators, removedCollab);
+          portal &&
+          isAccountPresent(portal.collaborators, removedCollab.account);
         if (!alreadyRemovedCollab) {
           await Portal.updateOne(
             { portalAddress: removedCollab.portalAddress },

@@ -20,7 +20,7 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
     const eventName = 'addedCollaborators';
     const invitedCollabResult = await axios.post(apiURL, {
       query: `{
-      ${eventName}(first: 1000, skip: ${invitedCollabEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
+      ${eventName}(first: 10, skip: ${invitedCollabEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
           portalAddress,
           by,
           blockNumber,
@@ -34,21 +34,26 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
 
     await Promise.all(
       invitedCollabs.map(async (invitedCollab) => {
-        const portalDetails = await getPortalDetailsFromAddress(
-          invitedCollab.portalAddress,
-        );
         const notif = new Notification({
           portalAddress: invitedCollab.portalAddress,
           content: {
             by: invitedCollab.by,
-            portalLogo: portalDetails.logo,
           },
           blockNumber: invitedCollab.blockNumber,
           type: 'collaboratorInvite',
           audience: 'individuals',
-          message: `${invitedCollab.by} invited you to become a collaborator of the portal ${portalDetails.name}`,
           forAddress: [invitedCollab.account],
         });
+        try {
+          const portalDetails = await getPortalDetailsFromAddress(
+            invitedCollab.portalAddress,
+          );
+          notif.message = `${invitedCollab.by} invited you to become a collaborator of the portal ${portalDetails.name}`;
+          notif.content.portalLogo = portalDetails.logo;
+        } catch (err) {
+          console.error('err during getting portal details', err);
+          notif.message = `${invitedCollab.by} invited you to become a collaborator of the portal ${invitedCollab.portalAddress}`;
+        }
         await notif.save();
       }),
     );

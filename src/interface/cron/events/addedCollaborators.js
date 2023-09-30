@@ -1,5 +1,5 @@
 const config = require('../../../../config');
-const getPortalDetailsFromAddress = require('../../../domain/portal/getPortalDetails');
+const getPortalDetails = require('../../../domain/portal/getPortalDetails');
 const isAccountPresent = require('../../../domain/portal/isAccountPresent');
 const {
   EventProcessor,
@@ -12,6 +12,55 @@ const axios = require('axios');
 
 const apiURL = config.SUBGRAPH_API;
 
+async function addCollaboratorToPortal(addedCollab) {
+  await Portal.updateOne(
+    { portalAddress: addedCollab.portalAddress },
+    {
+      $push: {
+        collaborators: {
+          address: addedCollab.account,
+          addedBlocknumber: addedCollab.blockNumber,
+        },
+      },
+    },
+    { upsert: true },
+  );
+}
+
+async function createNotificationForAddCollaborator(addedCollab) {
+  // Check if notification is alreay present
+  const notificaitonPresent = await Notification.findOne({
+    portalAddress: addedCollab.portalAddress,
+    blockNumber: addedCollab.blockNumber,
+    type: 'collaboratorJoin',
+  });
+  if (notificaitonPresent) return;
+
+  // Create a new notification.
+  const notification = new Notification({
+    portalAddress: addedCollab.portalAddress,
+    audience: 'individuals',
+    forAddress: [addedCollab.account],
+    content: {
+      by: addedCollab.by,
+      transactionHash: addedCollab.transactionHash,
+    },
+    blockNumber: addedCollab.blockNumber,
+    type: 'collaboratorJoin',
+  });
+  try {
+    const portalDetails = await getPortalDetails(
+      addedCollab.portalMetadataIPFSHash,
+    );
+    notification.message = `${addedCollab.account} joined the portal ${portalDetails.name}`;
+    notification.content.portalLogo = portalDetails.logo;
+  } catch (err) {
+    console.error('error in getting portal details', err);
+    notification.message = `${addedCollab.account} joined the portal ${addedCollab.portalAddress}`;
+  }
+  await notification.save();
+}
+
 agenda.define(jobs.ADDED_COLLABORATOR_JOB, async (job, done) => {
   try {
     const eventProcessed = await EventProcessor.findOne({});
@@ -19,14 +68,15 @@ agenda.define(jobs.ADDED_COLLABORATOR_JOB, async (job, done) => {
     if (eventProcessed) {
       addedCollabEventsProcessed = eventProcessed.addedCollaborator;
     }
-    const eventName = 'registerKeys';
+    const eventName = 'registeredCollaboratorKeys';
     const addedCollabResult = await axios.post(apiURL, {
       query: `{
-      ${eventName}(first: 100, skip: ${addedCollabEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
+      ${eventName}(first: 10, skip: ${addedCollabEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
           portalAddress,
-          by,
           blockNumber,
           account,
+          transactionHash,
+          portalMetadataIPFSHash,
         }
       }`,
     });
@@ -40,49 +90,25 @@ agenda.define(jobs.ADDED_COLLABORATOR_JOB, async (job, done) => {
           portalAddress: addedCollab.portalAddress,
         });
         const alreadyAddedCollab =
-          portal && isAccountPresent(portal.collaborators, addedCollab);
+          portal && isAccountPresent(portal.collaborators, addedCollab.account);
         if (!alreadyAddedCollab) {
-          await Portal.updateOne(
-            { portalAddress: addedCollab.portalAddress },
-            {
-              $push: {
-                collaborators: {
-                  address: addedCollab.account,
-                  addedBlocknumber: addedCollab.blockNumber,
+          await addCollaboratorToPortal(addedCollab);
+          await createNotificationForAddCollaborator(addedCollab);
+        } else {
+          if (alreadyAddedCollab.removedBlockNumber) {
+            await Portal.updateOne(
+              {
+                portalAddress: addedCollab.portalAddress,
+                'collaborators.address': addedCollab.account,
+              },
+              {
+                $set: {
+                  'collaborators.addedBlocknumber': addedCollab.blockNumber,
                 },
               },
-            },
-            { upsert: true },
-          );
-          const portalDetails = await getPortalDetailsFromAddress(
-            addedCollab.portalAddress,
-          );
-          const notification = new Notification({
-            portalAddress: addedCollab.portalAddress,
-            audience: 'individuals',
-            forAddress: [addedCollab.account],
-            content: {
-              by: addedCollab.by,
-              portalLogo: portalDetails.logo,
-            },
-            message: `${addedCollab.account} joined the portal ${portalDetails.name}`,
-            blockNumber: addedCollab.blockNumber,
-            type: 'collaboratorJoined',
-          });
-          await notification.save();
-        } else {
-          await Portal.updateOne(
-            {
-              portalAddress: addedCollab.portalAddress,
-              'collaborators.address': addedCollab.account,
-            },
-            {
-              $set: {
-                'collaborators.addedBlocknumber': addedCollab.blockNumber,
-              },
-            },
-            { upsert: true },
-          );
+              { upsert: true },
+            );
+          }
         }
       }),
     );

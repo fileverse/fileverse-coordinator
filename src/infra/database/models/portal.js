@@ -27,6 +27,16 @@ _portal.schema = new Schema({
   collaborators: [_accountSchema],
 });
 
+_portal.schema.methods.safeObject = function () {
+  const safeFields = ['_id', 'portalAddress', 'collaborators', 'members'];
+  const newSafeObject = {};
+  safeFields.forEach((elem) => {
+    // eslint-disable-next-line security/detect-object-injection
+    newSafeObject[elem] = this[elem];
+  });
+  return newSafeObject;
+};
+
 _portal.model = mongoose.model('portals', _portal.schema);
 
 module.exports = _portal;

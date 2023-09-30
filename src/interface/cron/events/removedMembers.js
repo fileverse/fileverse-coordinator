@@ -21,7 +21,7 @@ agenda.define(jobs.REMOVED_MEMBER_JOB, async (job, done) => {
     const eventName = 'removedMembers';
     const removedMemberData = await axios.post(apiURL, {
       query: `{
-      ${eventName}(first: 100, skip: ${removedMemberEventProcessed}, orderDirection: asc, orderBy: blockNumber) {
+      ${eventName}(first: 10, skip: ${removedMemberEventProcessed}, orderDirection: asc, orderBy: blockNumber) {
         portalAddress,
         blockNumber,
         account,
@@ -39,7 +39,7 @@ agenda.define(jobs.REMOVED_MEMBER_JOB, async (job, done) => {
         });
         const alreadyRemovedMember = isAccountPresent(
           portal.collaborators,
-          removedMember,
+          removedMember.account,
         );
         if (!alreadyRemovedMember) {
           await Portal.updateOne(

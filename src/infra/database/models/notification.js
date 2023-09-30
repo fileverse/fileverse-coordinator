@@ -63,7 +63,7 @@ _notification.schema.methods.safeObject = function () {
 };
 
 _notification.schema.index(
-  { portalAddress: 1, blockNumber: 1, content: 1 },
+  { portalAddress: 1, blockNumber: 1, message: 1 },
   { unique: true },
 );
 

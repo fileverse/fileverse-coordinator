@@ -12,6 +12,18 @@ const getFileDetails = require('../../../domain/notification/file/getFileDetails
 
 const apiURL = config.SUBGRAPH_API;
 
+async function notificationAlreadyPresent(addedFile) {
+  const foundNotif = await Notification.findOne({
+    portalAddress: addedFile.portalAddress,
+    blockNumber: addedFile.blockNumber,
+    'content.metadataIPFSHash': addedFile.metadataIPFSHash,
+  });
+  if (foundNotif) {
+    return true;
+  }
+  return false;
+}
+
 agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
   try {
     const eventName = 'addedFiles';
@@ -22,20 +34,27 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
     }
     const addFileData = await axios.post(apiURL, {
       query: `{
-        ${eventName}(first : 100, skip: ${addedFileEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
+        ${eventName}(first : 10, skip: ${addedFileEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
           fileType,
           metadataIPFSHash,
           blockNumber,
           by,
-          portalAddress
+          portalAddress,
+          portalMetadataIPFSHash
         }
       }`,
     });
 
     const data = addFileData?.data?.data;
     const addedFiles = data[eventName];
+    console.log('Recieved entries', jobs.ADDED_FILE_JOB, addedFiles.length);
+
     await Promise.all(
       addedFiles.map(async (addFile) => {
+        if (await notificationAlreadyPresent(addFile)) {
+          return;
+        }
+
         const portal = await Portal.findOne({
           portalAddress: addFile.portalAddress,
         });
@@ -43,11 +62,15 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
         const fileDetails = await getFileDetails({
           portal,
           fileTypeNumber: addFile.fileType,
-          metadataIPFSHash,
+          metadataIPFSHash: addFile.metadataIPFSHash,
         });
-        const portalDetails = await getPortalDetailsFromAddress(
-          addFile.portalAddress,
-        );
+
+        let portalDetails = null;
+        try {
+          portalDetails = await getPortalDetailsFromAddress(
+            addFile.portalMetadataIPFSHash,
+          );
+        } catch (err) {}
 
         const notif = new Notification({
           portalAddress: addFile.portalAddress,
@@ -55,7 +78,11 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
           forAddress: fileDetails.forAddress,
           blockNumber: addFile.blockNumber,
           type: 'addFile',
-          message: `${addFile.by} added ${fileDetails.fileType} file - ${fileDetails.metadata.name} in portal ${portalDetails.name}`,
+          message: `${addFile.by} added ${fileDetails.fileType} file  ${
+            fileDetails.metadata ? fileDetails.metadata.name : ''
+          } in portal ${
+            portalDetails ? portalDetails.name : addFile.portalAddress
+          }`,
           content: {
             by: addFile.by,
             metadataIPFSHash: addFile.metadataIPFSHash,
@@ -63,7 +90,6 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
             fileMetadata: fileDetails.metadata,
           },
         });
-
         await notif.save();
       }),
     );
@@ -81,5 +107,7 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
   } catch (err) {
     console.error('error during job', jobs.ADDED_FILE_JOB, err);
     done(err);
+  } finally {
+    console.log('Done job', jobs.ADDED_FILE_JOB);
   }
 });

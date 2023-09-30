@@ -43,18 +43,21 @@ async function getFileDetails({ portal, fileTypeNumber, metadataIPFSHash }) {
       return;
     }
   }
-
-  const result = await axios.get('https://dweb.link/ipfs/' + metadataIPFSHash);
-  const metadata = result?.data;
-
+  let metadata = null;
+  try {
+    const result = await axios.get('https://ipfs.io/ipfs/' + metadataIPFSHash);
+    metadata = result?.data;
+  } catch (err) {
+    console.error('Error during getting file details', err);
+  }
   return {
     audience,
     forAddress,
     fileType,
     metadata: {
-      name: metadata.name,
-      mimeType: metadata.mimeType,
-      owner: metadata.owner,
+      name: metadata?.name,
+      mimeType: metadata?.mimeType,
+      owner: metadata?.owner,
     },
   };
 }

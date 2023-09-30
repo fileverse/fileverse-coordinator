@@ -22,12 +22,13 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
     }
     const editFileData = await axios.get(apiURL, {
       query: `{
-      ${eventName}(first : 100, skip: 0, orderDirection: asc, orderBy: blockNumber) {
+      ${eventName}(first : 10, skip: 0, orderDirection: asc, orderBy: blockNumber) {
         fileType,
         metadataIPFSHash,
         blockNumber,
         by,
-        portalAddress
+        portalAddress,
+        portalMetadataIPFSHash
       }
     }`,
     });
