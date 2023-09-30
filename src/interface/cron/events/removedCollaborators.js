@@ -27,6 +27,7 @@ agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
       by,
       blockNumber,
       account,
+      portalMetadataIPFSHash
     }
   }`,
     });
@@ -42,7 +43,8 @@ agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
         const alreadyRemovedCollab =
           portal &&
           isAccountPresent(portal.collaborators, removedCollab.account);
-        if (!alreadyRemovedCollab) {
+
+        if (!alreadyRemovedCollab.removedBlocknumber) {
           await Portal.updateOne(
             { portalAddress: removedCollab.portalAddress },
             {
@@ -70,7 +72,7 @@ agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
           );
         }
         const portalDetails = await getPortalDetailsFromAddress(
-          removedCollab.portalAddress,
+          removedCollab.portalMetadataIPFSHash,
         );
         const notification = new Notification({
           portalAddress: removedCollab.portalAddress,
@@ -80,7 +82,9 @@ agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
             by: removedCollab.by,
             account: removedCollab.account,
           },
-          message: `You were removed from portal ${portalDetails.name} by ${removedCollab.by}`,
+          message: `You were removed from portal ${
+            portalDetails ? portalDetails.name : removedCollab.portalAddress
+          } by ${removedCollab.by}`,
           blockNumber: removedCollab.blockNumber,
           type: 'collaboratorRemove',
         });
