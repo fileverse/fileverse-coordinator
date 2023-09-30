@@ -16,13 +16,16 @@ async function graceful() {
     // require('./interface/cron/events/addedCollaborators');
     // require('./interface/cron/events/addedFiles');
     // require('./interface/cron/events/addedMembers');
-    // require('./interface/cron/events/editedFiles');
-    require('./interface/cron/events/invitedCollaborators');
+    require('./interface/cron/events/editedFiles');
+    // require('./interface/cron/events/invitedCollaborators');
     // require('./interface/cron/events/removedMembers');
     // require('./interface/cron/events/removedCollaborators');
 
-    await agenda.every('* * * * *', jobs.INVITED_COLLABORATOR_JOB);
-
+    // await agenda.every('* * * * *', jobs.INVITED_COLLABORATOR_JOB);
+    // await agenda.every('* * * * *', jobs.ADDED_COLLABORATOR_JOB);
+    // await agenda.now(jobs.ADDED_COLLABORATOR_JOB);
+    // await agenda.every('* * * * *', jobs.ADDED_FILE_JOB);
+    await agenda.now(jobs.EDITED_FILE_JOB);
     // Object.keys(jobs).map(async (job) => {
     //   await agenda.every('* * * * *', job);
     // });
