@@ -2,9 +2,10 @@ const axios = require('axios');
 
 async function getPortalDetailsFromAddress(portalMetadataIPFSHash) {
   try {
-    const result = await axios.get(
-      'https://ipfs.io/ipfs/' + portalMetadataIPFSHash,
-    );
+    const result = await Promise.any([
+      axios.get('https://w3s.link/ipfs/' + portalMetadataIPFSHash),
+      axios.get('https://ipfs.io/ipfs/' + portalMetadataIPFSHash),
+    ]);
     const metadata = result?.data;
     return {
       name: metadata?.name,

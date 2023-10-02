@@ -39,6 +39,7 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
           metadataIPFSHash,
           blockNumber,
           by,
+          fileId,
           portalAddress,
           portalMetadataIPFSHash
         }
@@ -65,8 +66,9 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
           metadataIPFSHash: addFile.metadataIPFSHash,
         });
 
-        const portalDetails = (portalDetails =
-          await getPortalDetailsFromAddress(addFile.portalMetadataIPFSHash));
+        const portalDetails = await getPortalDetailsFromAddress(
+          addFile.portalMetadataIPFSHash,
+        );
 
         const notif = new Notification({
           portalAddress: addFile.portalAddress,
@@ -84,6 +86,7 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
             metadataIPFSHash: addFile.metadataIPFSHash,
             fileType: addFile.fileType,
             fileMetadata: fileDetails.metadata,
+            fileId: addFile.fileId,
           },
         });
         await notif.save();

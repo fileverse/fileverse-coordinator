@@ -2,9 +2,9 @@ const axios = require('axios');
 
 async function getFileDetails({ portal, fileTypeNumber, metadataIPFSHash }) {
   let membersAndCollabs = [];
-  if (portal.members)
+  if (portal?.members)
     membersAndCollabs = membersAndCollabs.concat(portal.members);
-  if (portal.collaborators)
+  if (portal?.collaborators)
     membersAndCollabs = membersAndCollabs.concat(portal.members);
   let audience = '';
   let forAddress = [];
@@ -21,21 +21,21 @@ async function getFileDetails({ portal, fileTypeNumber, metadataIPFSHash }) {
       // private, collaborators only
       audience = 'collaborators_only';
       fileType = 'private';
-      forAddress = portal.collaborators;
+      forAddress = portal?.collaborators;
       break;
     }
     case '2': {
       // gated
       audience = 'individuals';
       fileType = 'gated';
-      forAddress = portal.membersAndCollabs;
+      forAddress = membersAndCollabs;
       break;
     }
     case '3': {
       // members
       audience = 'members_only';
       fileType = 'members only';
-      forAddress = portal.members;
+      forAddress = portal?.members;
       break;
     }
     default: {
@@ -43,9 +43,20 @@ async function getFileDetails({ portal, fileTypeNumber, metadataIPFSHash }) {
       return;
     }
   }
+  if (!metadataIPFSHash) {
+    return {
+      audience,
+      forAddress,
+      fileType,
+      metadata: null,
+    };
+  }
   let metadata = null;
   try {
-    const result = await axios.get('https://ipfs.io/ipfs/' + metadataIPFSHash);
+    const result = await Promise.any([
+      axios.get('https://w3s.link/ipfs/' + metadataIPFSHash),
+      axios.get('https://ipfs.io/ipfs/' + metadataIPFSHash),
+    ]);
     metadata = result?.data;
   } catch (err) {
     console.error('Error during getting file details', err);

@@ -27,6 +27,7 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
         metadataIPFSHash,
         blockNumber,
         by,
+        fileId,
         portalAddress,
         portalMetadataIPFSHash
       }
@@ -49,6 +50,17 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
           fileTypeNumber: editFile.fileType,
           metadataIPFSHash: editFile.metadataIPFSHash,
         });
+
+        const notifications = await Notification.find({
+          portalAddress: editFile.portalAddress,
+          'content.fileId': editFile.fileId,
+        })
+          .sort({ blockNumber: -1 })
+          .limit(1);
+
+        const prevFileMetadata =
+          notifications.length && notifications[0]?.content?.fileMetadata;
+
         const portalDetails = await getPortalDetailsFromAddress(
           editFile.portalMetadataIPFSHash,
         );
@@ -60,7 +72,7 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
           blockNumber: editFile.blockNumber,
           type: 'editFile',
           message: `${editFile.by} edited the file  ${
-            fileDetails.metadata ? fileDetails.metadata.name : ''
+            prevFileMetadata ? prevFileMetadata.name : ''
           } in portal ${
             portalDetails ? portalDetails.name : editFile.portalAddress
           }`,
@@ -77,8 +89,8 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
           'bafybeify3xbts44jrrcidno7gxqs5fyvf5rbx3zkncnbjaibejjetvqtqe/metadata'
         ) {
           notif.type = 'deleteFile';
-          notif.message = `${editFile.by} deleted the file - ${
-            fileDetails.metadata ? fileDetails.metadata.name : ''
+          notif.message = `${editFile.by} deleted the file  ${
+            prevFileMetadata ? prevFileMetadata.name : ''
           } from portal ${
             portalDetails ? portalDetails.name : editFile.portalAddress
           }`;
