@@ -62,11 +62,6 @@ _notification.schema.methods.safeObject = function () {
   return newSafeObject;
 };
 
-_notification.schema.index(
-  { portalAddress: 1, blockNumber: 1, message: 1 },
-  { unique: true },
-);
-
 _notification.model = mongoose.model('notifications', _notification.schema);
 
 module.exports = _notification;

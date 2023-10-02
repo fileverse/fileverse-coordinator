@@ -8,13 +8,16 @@ async function get({ address, read, offset, limit, portalAddress }) {
     address = address.toLowerCase();
     matchQuery.forAddress = [address];
   }
-  matchQuery.processed = false;
+
   if (portalAddress) {
     matchQuery.portalAddress = portalAddress.toLowerCase();
   }
-  if (read) {
-    matchQuery.processed = true;
+  if (read !== undefined) {
+    console.log({ read });
+    matchQuery.processed = read;
   }
+
+  console.log({ matchQuery });
 
   const notifications = await Notification.find(matchQuery)
     .sort({ timeStamp: -1, blockNumber: -1 })

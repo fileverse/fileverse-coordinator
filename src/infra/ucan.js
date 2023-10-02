@@ -24,26 +24,31 @@ let verify = (req, res, next) => {
     collaboratorKey({ contractAddress, invokerAddress, chainId })
       .then((invokerDID) => {
         if (invokerDID) {
-          ucans.verify(token, {
-            // to make sure we're the intended recipient of this UCAN
-            audience: serviceDID,
-            // capabilities required for this invocation & which owner we expect for each capability
-            requiredCapabilities: [
-              {
-                capability: {
-                  with: { scheme: "storage", hierPart: contractAddress.toLowerCase() },
-                  can: { namespace: "file", segments: ["CREATE"] }
+          ucans
+            .verify(token, {
+              // to make sure we're the intended recipient of this UCAN
+              audience: serviceDID,
+              // capabilities required for this invocation & which owner we expect for each capability
+              requiredCapabilities: [
+                {
+                  capability: {
+                    with: {
+                      scheme: 'storage',
+                      hierPart: contractAddress.toLowerCase(),
+                    },
+                    can: { namespace: 'file', segments: ['CREATE'] },
+                  },
+                  rootIssuer: invokerDID,
                 },
-                rootIssuer: invokerDID,
+              ],
+            })
+            .then((result) => {
+              console.log(result);
+              if (result.ok) {
+                req.isAuthenticated = true;
               }
-            ],
-          }).then((result) => {
-            console.log(result);
-            if (result.ok) {
-              req.isAuthenticated = true;
-            }
-            next();
-          });
+              next();
+            });
         } else {
           next();
         }
