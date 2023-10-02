@@ -23,7 +23,7 @@ async function get({ address, read, offset, limit, portalAddress }) {
 
   notifications.forEach((notification, index) => {
     if (notification.message.includes(address)) {
-      notification.message.replace(addresss, 'you');
+      notification.message.replace(address, 'you');
       notifications[index] = notification;
     }
   });
