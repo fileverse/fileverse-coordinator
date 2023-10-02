@@ -15,8 +15,8 @@ const getValidation = {
 async function get(req, res) {
   const { invokerAddress, portalAddress, offset, limit, isRead } = req.query;
   const notifications = await notification.get({
-    address: invokerAddress.toLowerCase(),
-    portalAddress: portalAddress.toLowerCase(),
+    address: invokerAddress,
+    portalAddress: portalAddress,
     offset,
     limit,
     read: isRead === 'true' ? true : false,

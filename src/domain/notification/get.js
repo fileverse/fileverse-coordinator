@@ -5,11 +5,12 @@ const { Notification } = require('../../infra/database/models');
 async function get({ address, read, offset, limit, portalAddress }) {
   const matchQuery = {};
   if (address) {
+    address = address.toLowerCase();
     matchQuery.forAddress = [address];
   }
   matchQuery.processed = false;
   if (portalAddress) {
-    matchQuery.portalAddress = portalAddress;
+    matchQuery.portalAddress = portalAddress.toLowerCase();
   }
   if (read) {
     matchQuery.processed = true;
