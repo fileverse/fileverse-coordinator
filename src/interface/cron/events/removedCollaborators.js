@@ -15,14 +15,14 @@ const apiURL = config.SUBGRAPH_API;
 agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
   try {
     const eventProcessed = await EventProcessor.findOne({});
-    let removedCollabEventsProcessed = 0;
+    let removedCollabCheckpt = 0;
     if (eventProcessed) {
-      removedCollabEventsProcessed = eventProcessed.removeCollaborator;
+      removedCollabCheckpt = eventProcessed.removeCollaborator;
     }
     const eventName = 'removedCollaborators';
     const removedCollabData = await axios.post(apiURL, {
       query: `{
-    ${eventName}(first: 10, skip: ${removedCollabEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
+    ${eventName}(first: 5, orderDirection: asc, orderBy: blockNumber, where: {blockNumber_gt: ${removedCollabCheckpt}}) {
       portalAddress,
       by,
       blockNumber,
@@ -34,6 +34,10 @@ agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
 
     const data = removedCollabData?.data?.data;
     const removedCollabs = data[eventName];
+    let newRemovedCollabCheckpt = null;
+    if (removedCollabs && removedCollabs.length) {
+      newRemovedCollabCheckpt = removedCollabs.slice(-1).blockNumber;
+    }
 
     await Promise.all(
       removedCollabs.map(async (removedCollab) => {
@@ -74,6 +78,14 @@ agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
         const portalDetails = await getPortalDetailsFromAddress(
           removedCollab.portalMetadataIPFSHash,
         );
+
+        // Delete the collaboratorInvite Notification
+        await Notification.deleteMany({
+          portalAddress: addedCollab.portalAddress,
+          forAddress: addedCollab.account,
+          type: 'collaboratorInvite',
+        });
+
         const notification = new Notification({
           portalAddress: removedCollab.portalAddress,
           audience: 'individuals',
@@ -92,16 +104,17 @@ agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
       }),
     );
 
-    await EventProcessor.updateOne(
-      {},
-      {
-        $set: {
-          removeCollaborator:
-            removedCollabEventsProcessed + removedCollabs.length,
+    if (newRemovedCollabCheckpt) {
+      await EventProcessor.updateOne(
+        {},
+        {
+          $set: {
+            removeCollaborator: newRemovedCollabCheckpt,
+          },
         },
-      },
-      { upsert: true },
-    );
+        { upsert: true },
+      );
+    }
     done();
   } catch (err) {
     console.error('error during job', jobs.REMOVED_COLLABORATOR_JOB, error);

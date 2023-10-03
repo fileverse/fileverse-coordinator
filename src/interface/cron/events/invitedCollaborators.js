@@ -13,14 +13,14 @@ const apiURL = config.SUBGRAPH_API;
 agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
   try {
     const eventProcessed = await EventProcessor.findOne({});
-    let invitedCollabEventsProcessed = 0;
+    let invitedCollabCheckpt = 0;
     if (eventProcessed) {
-      invitedCollabEventsProcessed = eventProcessed.invitedCollaborator;
+      invitedCollabCheckpt = eventProcessed.invitedCollaborator;
     }
     const eventName = 'addedCollaborators';
     const invitedCollabResult = await axios.post(apiURL, {
       query: `{
-      ${eventName}(first: 5, skip: ${invitedCollabEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
+      ${eventName}(first: 5, orderDirection: asc, orderBy: blockNumber, where: {blockNumber_gt : ${invitedCollabCheckpt}}) {
           portalAddress,
           by,
           blockNumber,
@@ -31,6 +31,11 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
 
     const data = invitedCollabResult?.data?.data;
     const invitedCollabs = data[eventName];
+
+    let newInvitedCollabCheckpt = null;
+    if (invitedCollabs && invitedCollabs.length) {
+      newInvitedCollabCheckpt = invitedCollabs.slice(-1).blockNumber;
+    }
 
     console.log(
       'Recieved entries',
@@ -63,16 +68,17 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
       }),
     );
 
-    await EventProcessor.updateOne(
-      {},
-      {
-        $set: {
-          invitedCollaborator:
-            invitedCollabEventsProcessed + invitedCollabs.length,
+    if (newInvitedCollabCheckpt) {
+      await EventProcessor.updateOne(
+        {},
+        {
+          $set: {
+            invitedCollaborator: newInvitedCollabCheckpt,
+          },
         },
-      },
-      { upsert: true },
-    );
+        { upsert: true },
+      );
+    }
     done();
   } catch (err) {
     console.error(
@@ -81,5 +87,7 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
       err,
     );
     done(err);
+  } finally {
+    console.log('Job done', jobs.INVITED_COLLABORATOR_JOB);
   }
 });

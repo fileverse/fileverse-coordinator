@@ -36,6 +36,13 @@ async function createNotificationForAddCollaborator(addedCollab) {
   });
   if (notificaitonPresent) return;
 
+  // Delete the notification for collaboratorInvite
+  await Notification.deleteMany({
+    portalAddress: addedCollab.portalAddress,
+    forAddress: addedCollab.account,
+    type: 'collaboratorInvite',
+  });
+
   // Create a new notification.
   const notification = new Notification({
     portalAddress: addedCollab.portalAddress,
@@ -64,14 +71,14 @@ async function createNotificationForAddCollaborator(addedCollab) {
 agenda.define(jobs.ADDED_COLLABORATOR_JOB, async (job, done) => {
   try {
     const eventProcessed = await EventProcessor.findOne({});
-    let addedCollabEventsProcessed = 0;
+    let addedCollabCheckpt = 0;
     if (eventProcessed) {
-      addedCollabEventsProcessed = eventProcessed.addedCollaborator;
+      addedCollabCheckpt = eventProcessed.addedCollaborator;
     }
     const eventName = 'registeredCollaboratorKeys';
     const addedCollabResult = await axios.post(apiURL, {
       query: `{
-      ${eventName}(first: 5, skip: ${addedCollabEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
+      ${eventName}(first: 5, orderDirection: asc, orderBy: blockNumber, where: {blockNumber_gt: ${addedCollabCheckpt} }) {
           portalAddress,
           blockNumber,
           account,
@@ -83,6 +90,11 @@ agenda.define(jobs.ADDED_COLLABORATOR_JOB, async (job, done) => {
 
     const data = addedCollabResult?.data?.data;
     const addedCollabs = data[eventName];
+
+    let newAddedCollabCheckpt = null;
+    if (addedCollabs && addedCollabs.length) {
+      newAddedCollabCheckpt = addedCollabs.slice(-1)[0].blockNumber;
+    }
 
     console.log(
       'Recieved entries',
@@ -118,15 +130,17 @@ agenda.define(jobs.ADDED_COLLABORATOR_JOB, async (job, done) => {
         }
       }),
     );
-
-    await EventProcessor.updateOne(
-      {},
-      {
-        $set: {
-          addedCollaborator: addedCollabEventsProcessed + addedCollabs.length,
+    if (newAddedCollabCheckpt) {
+      await EventProcessor.updateOne(
+        {},
+        {
+          $set: {
+            addedCollaborator: newAddedCollabCheckpt,
+          },
         },
-      },
-    );
+        { upsert: true },
+      );
+    }
     done();
   } catch (err) {
     console.error(
@@ -135,5 +149,7 @@ agenda.define(jobs.ADDED_COLLABORATOR_JOB, async (job, done) => {
       err,
     );
     done(err);
+  } finally {
+    console.log('Job done', jobs.ADDED_COLLABORATOR_JOB);
   }
 });

@@ -16,13 +16,13 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
   try {
     const eventName = 'editedFiles';
     const eventProcessed = await EventProcessor.findOne({});
-    let editedFileEventsProcessed = 0;
+    let editedFileCheckpt = 0;
     if (eventProcessed) {
-      editedFileEventsProcessed = eventProcessed.editFile;
+      editedFileCheckpt = eventProcessed.editFile;
     }
     const editFileData = await axios.post(apiURL, {
       query: `{
-      ${eventName}(first : 5, skip: ${editedFileEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
+      ${eventName}(first : 5, orderDirection: asc, orderBy: blockNumber, where:{blockNumber_gt: ${editedFileCheckpt}}) {
         fileType,
         metadataIPFSHash,
         blockNumber,
@@ -35,8 +35,11 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
     });
 
     const data = editFileData?.data?.data;
-
     const editedFiles = data[eventName];
+    let newEditedFileCheckpt = null;
+    if (editedFiles && editedFiles.length) {
+      newEditedFileCheckpt = editedFiles.slice(-1).blockNumber;
+    }
 
     console.log('Recieved entries', jobs.EDITED_FILE_JOB, editedFiles.length);
 
@@ -104,15 +107,17 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
       }),
     );
 
-    await EventProcessor.updateOne(
-      {},
-      {
-        $set: {
-          editFile: editedFileEventsProcessed + editedFiles.length,
+    if (newEditedFileCheckpt) {
+      await EventProcessor.updateOne(
+        {},
+        {
+          $set: {
+            editFile: newEditedFileCheckpt,
+          },
         },
-      },
-      { upsert: true },
-    );
+        { upsert: true },
+      );
+    }
     done();
   } catch (err) {
     console.error('error during job', jobs.EDITED_FILE_JOB, err);
