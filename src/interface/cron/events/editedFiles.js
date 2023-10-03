@@ -97,7 +97,9 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
         ) {
           notif.type = 'deleteFile';
           notif.message = `${editFile.by} deleted the file  ${
-            prevFileMetadata ? prevFileMetadata.name : ''
+            prevFileMetadata && prevFileMetadata.name
+              ? prevFileMetadata.name
+              : ''
           } from portal ${
             portalDetails ? portalDetails.name : editFile.portalAddress
           }`;

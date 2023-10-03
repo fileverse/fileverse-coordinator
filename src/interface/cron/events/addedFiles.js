@@ -87,7 +87,9 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
           blockNumber: addFile.blockNumber,
           type: 'addFile',
           message: `${addFile.by} added ${fileDetails.fileType} file ${
-            fileDetails.metadata ? fileDetails.metadata.name : ''
+            fileDetails.metadata && fileDetails.metadata.name
+              ? fileDetails.metadata.name
+              : ''
           } in portal ${
             portalDetails ? portalDetails.name : addFile.portalAddress
           }`,
