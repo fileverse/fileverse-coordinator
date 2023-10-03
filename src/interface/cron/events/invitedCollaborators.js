@@ -45,6 +45,14 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
 
     await Promise.all(
       invitedCollabs.map(async (invitedCollab) => {
+        const joinedOrAlreadyNotified = await Notification.findOne({
+          portalAddress: invitedCollab.portalAddress,
+          forAddress: invitedCollab.account,
+          $or: [{ type: 'collaboratorInvite' }, { type: 'collaboratorJoin' }],
+        });
+
+        if (joinedOrAlreadyNotified) return;
+
         const notif = new Notification({
           portalAddress: invitedCollab.portalAddress,
           content: {
