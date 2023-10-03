@@ -75,7 +75,7 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
           forAddress: fileDetails.forAddress,
           blockNumber: editFile.blockNumber,
           type: 'editFile',
-          message: `${editFile.by} edited the file  ${
+          message: `${editFile.by} edited the file ${
             prevFileMetadata ? prevFileMetadata.name : ''
           } in portal ${
             portalDetails ? portalDetails.name : editFile.portalAddress
