@@ -20,7 +20,7 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
     const eventName = 'addedCollaborators';
     const invitedCollabResult = await axios.post(apiURL, {
       query: `{
-      ${eventName}(first: 10, skip: ${invitedCollabEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
+      ${eventName}(first: 5, skip: ${invitedCollabEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
           portalAddress,
           by,
           blockNumber,
@@ -31,6 +31,12 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
 
     const data = invitedCollabResult?.data?.data;
     const invitedCollabs = data[eventName];
+
+    console.log(
+      'Recieved entries',
+      jobs.INVITED_COLLABORATOR_JOB,
+      invitedCollabs.length,
+    );
 
     await Promise.all(
       invitedCollabs.map(async (invitedCollab) => {

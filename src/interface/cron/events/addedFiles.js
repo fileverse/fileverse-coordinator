@@ -34,7 +34,7 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
     }
     const addFileData = await axios.post(apiURL, {
       query: `{
-        ${eventName}(first : 20, skip: ${addedFileEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
+        ${eventName}(first : 5, skip: ${addedFileEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
           fileType,
           metadataIPFSHash,
           blockNumber,

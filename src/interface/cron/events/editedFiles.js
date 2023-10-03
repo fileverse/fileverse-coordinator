@@ -22,7 +22,7 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
     }
     const editFileData = await axios.post(apiURL, {
       query: `{
-      ${eventName}(first : 20, skip: ${editedFileEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
+      ${eventName}(first : 5, skip: ${editedFileEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
         fileType,
         metadataIPFSHash,
         blockNumber,
