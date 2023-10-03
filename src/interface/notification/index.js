@@ -7,6 +7,13 @@ const create = require('./create');
 const canViewNotification = require('../middleware/canViewNotification');
 const canCreateNotification = require('../middleware/canCreateNotification');
 const process = require('./process');
+const unread = require('./unread');
+
+router.get(
+  '/unread',
+  asyncHandler(canViewNotification),
+  asyncHandlerArray(unread),
+);
 
 router.post(
   '/',
