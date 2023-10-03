@@ -13,11 +13,8 @@ async function get({ address, read, offset, limit, portalAddress }) {
     matchQuery.portalAddress = portalAddress.toLowerCase();
   }
   if (read !== undefined) {
-    console.log({ read });
     matchQuery.processed = read;
   }
-
-  console.log({ matchQuery });
 
   const notifications = await Notification.find(matchQuery)
     .sort({ timeStamp: -1, blockNumber: -1 })
@@ -28,7 +25,6 @@ async function get({ address, read, offset, limit, portalAddress }) {
     notification = notification.safeObject();
     if (notification.message.includes(address)) {
       notification.message = notification.message.replace(address, 'you');
-      console.log(notification.message);
       notifications[index] = notification;
     }
   });

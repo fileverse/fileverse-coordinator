@@ -22,7 +22,7 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
     }
     const editFileData = await axios.post(apiURL, {
       query: `{
-      ${eventName}(first : 10, skip: ${editedFileEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
+      ${eventName}(first : 20, skip: ${editedFileEventsProcessed}, orderDirection: asc, orderBy: blockNumber) {
         fileType,
         metadataIPFSHash,
         blockNumber,
@@ -64,6 +64,10 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
         const portalDetails = await getPortalDetailsFromAddress(
           editFile.portalMetadataIPFSHash,
         );
+
+        if (!fileDetails.forAddress.includes(editFile.by)) {
+          fileDetails.forAddress.push(editFile.by);
+        }
 
         const notif = new Notification({
           portalAddress: editFile.portalAddress,

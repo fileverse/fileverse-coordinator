@@ -5,6 +5,7 @@ async function getPortalDetailsFromAddress(portalMetadataIPFSHash) {
     const result = await Promise.any([
       axios.get('https://w3s.link/ipfs/' + portalMetadataIPFSHash),
       axios.get('https://ipfs.io/ipfs/' + portalMetadataIPFSHash),
+      axios.get('https://dweb.link/ipfs/' + portalMetadataIPFSHash),
     ]);
     const metadata = result?.data;
     return {

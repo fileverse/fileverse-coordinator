@@ -56,6 +56,7 @@ async function getFileDetails({ portal, fileTypeNumber, metadataIPFSHash }) {
     const result = await Promise.any([
       axios.get('https://w3s.link/ipfs/' + metadataIPFSHash),
       axios.get('https://ipfs.io/ipfs/' + metadataIPFSHash),
+      axios.get('https://dweb.link/ipfs/' + metadataIPFSHash),
     ]);
     metadata = result?.data;
   } catch (err) {
