@@ -25,8 +25,10 @@ async function get({ address, read, offset, limit, portalAddress }) {
     .limit(limit);
 
   notifications.forEach((notification, index) => {
+    notification = notification.safeObject();
     if (notification.message.includes(address)) {
-      notification.message.replace(address, 'you');
+      notification.message = notification.message.replace(address, 'you');
+      console.log(notification.message);
       notifications[index] = notification;
     }
   });

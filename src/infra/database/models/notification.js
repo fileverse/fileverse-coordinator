@@ -52,6 +52,7 @@ _notification.schema.methods.safeObject = function () {
     'processed',
     'timeStamp',
     'type',
+    'message',
     'blockNumber',
   ];
   const newSafeObject = {};

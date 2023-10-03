@@ -23,7 +23,7 @@ async function graceful() {
 
     await agenda.every('* * * * *', jobs.INVITED_COLLABORATOR_JOB);
     await agenda.every('* * * * *', jobs.ADDED_COLLABORATOR_JOB);
-    await agenda.every('* * * * *', jobs.ADDED_FILE_JOB);
+  await agenda.every('* * * * *', jobs.ADDED_FILE_JOB);
     await agenda.every('* * * * *', jobs.EDITED_FILE_JOB);
   } catch (err) {
     console.log(err.stack);
