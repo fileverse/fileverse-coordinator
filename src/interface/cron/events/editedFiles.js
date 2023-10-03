@@ -38,7 +38,7 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
     const editedFiles = data[eventName];
     let newEditedFileCheckpt = null;
     if (editedFiles && editedFiles.length) {
-      newEditedFileCheckpt = editedFiles.slice(-1).blockNumber;
+      newEditedFileCheckpt = editedFiles.slice(-1)[0].blockNumber;
     }
 
     console.log('Recieved entries', jobs.EDITED_FILE_JOB, editedFiles.length);

@@ -34,7 +34,7 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
 
     let newInvitedCollabCheckpt = null;
     if (invitedCollabs && invitedCollabs.length) {
-      newInvitedCollabCheckpt = invitedCollabs.slice(-1).blockNumber;
+      newInvitedCollabCheckpt = invitedCollabs.slice(-1)[0].blockNumber;
     }
 
     console.log(
