@@ -13,48 +13,37 @@ let verify = (req, res, next) => {
     // Remove Bearer from string
     token = token.slice(7, token.length);
   }
-  const contractAddress = req.headers && req.headers.contract;
+
   const invokerAddress = req.headers && req.headers.invoker;
   const chainId = req.headers && req.headers.chain;
   req.isAuthenticated = false;
   req.invokerAddress = invokerAddress;
-  req.contractAddress = contractAddress;
   req.chainId = chainId;
-  if (token && contractAddress) {
-    collaboratorKey({ contractAddress, invokerAddress, chainId })
-      .then((invokerDID) => {
-        if (invokerDID) {
-          ucans
-            .verify(token, {
-              // to make sure we're the intended recipient of this UCAN
-              audience: serviceDID,
-              // capabilities required for this invocation & which owner we expect for each capability
-              requiredCapabilities: [
-                {
-                  capability: {
-                    with: {
-                      scheme: 'storage',
-                      hierPart: contractAddress.toLowerCase(),
-                    },
-                    can: { namespace: 'file', segments: ['CREATE'] },
-                  },
-                  rootIssuer: invokerDID,
-                },
-              ],
-            })
-            .then((result) => {
-              console.log(result);
-              if (result.ok) {
-                req.isAuthenticated = true;
-              }
-              next();
-            });
-        } else {
-          next();
-        }
+  const invokerDID = config.ISSUER_DID;
+  if (invokerDID) {
+    ucans
+      .verify(token, {
+        // to make sure we're the intended recipient of this UCAN
+        audience: serviceDID,
+        // capabilities required for this invocation & which owner we expect for each capability
+        requiredCapabilities: [
+          {
+            capability: {
+              with: {
+                scheme: 'auth',
+                hierPart: invokerAddress.toLowerCase(),
+              },
+              can: { namespace: 'token', segments: ['CREATE'] },
+            },
+            rootIssuer: invokerDID,
+          },
+        ],
       })
-      .catch((error) => {
-        console.log(error);
+      .then((result) => {
+        console.log(result);
+        if (result.ok) {
+          req.isAuthenticated = true;
+        }
         next();
       });
   } else {
