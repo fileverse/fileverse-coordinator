@@ -36,8 +36,14 @@ agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
     const removedCollabs = data[eventName];
     let newRemovedCollabCheckpt = null;
     if (removedCollabs && removedCollabs.length) {
-      newRemovedCollabCheckpt = removedCollabs.slice(-1).blockNumber;
+      newRemovedCollabCheckpt = removedCollabs.slice(-1)[0].blockNumber;
     }
+
+    console.log(
+      'Recieved entries',
+      jobs.REMOVED_COLLABORATOR_JOB,
+      removedCollabs.length,
+    );
 
     await Promise.all(
       removedCollabs.map(async (removedCollab) => {
@@ -48,7 +54,7 @@ agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
           portal &&
           isAccountPresent(portal.collaborators, removedCollab.account);
 
-        if (!alreadyRemovedCollab.removedBlocknumber) {
+        if (!alreadyRemovedCollab) {
           await Portal.updateOne(
             { portalAddress: removedCollab.portalAddress },
             {
@@ -79,11 +85,11 @@ agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
           removedCollab.portalMetadataIPFSHash,
         );
 
-        // Delete the collaboratorInvite Notification
+        // Delete the collaboratorInvite and collaboratorJoin Notification
         await Notification.deleteMany({
-          portalAddress: addedCollab.portalAddress,
-          forAddress: addedCollab.account,
-          type: 'collaboratorInvite',
+          portalAddress: removedCollab.portalAddress,
+          forAddress: removedCollab.account,
+          $or: [{ type: 'collaboratorInvite' }, { type: 'collaboratorJoin' }],
         });
 
         const notification = new Notification({
@@ -93,9 +99,12 @@ agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
           content: {
             by: removedCollab.by,
             account: removedCollab.account,
+            portalLogo: portalDetails?.logo,
           },
-          message: `You were removed from portal ${
-            portalDetails ? portalDetails.name : removedCollab.portalAddress
+          message: `${removedCollab.account} were removed from portal ${
+            portalDetails && portalDetails.name
+              ? portalDetails.name
+              : removedCollab.portalAddress
           } by ${removedCollab.by}`,
           blockNumber: removedCollab.blockNumber,
           type: 'collaboratorRemove',
@@ -117,7 +126,9 @@ agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
     }
     done();
   } catch (err) {
-    console.error('error during job', jobs.REMOVED_COLLABORATOR_JOB, error);
+    console.error('error during job', jobs.REMOVED_COLLABORATOR_JOB, err);
     done(err);
+  } finally {
+    console.log('Done job', jobs.REMOVED_COLLABORATOR_JOB);
   }
 });

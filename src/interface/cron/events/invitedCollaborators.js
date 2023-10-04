@@ -49,6 +49,7 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
           portalAddress: invitedCollab.portalAddress,
           forAddress: invitedCollab.account,
           $or: [{ type: 'collaboratorInvite' }, { type: 'collaboratorJoin' }],
+          blockNumber: { $lt: invitedCollab.blockNumber },
         });
 
         if (joinedOrAlreadyNotified) return;
