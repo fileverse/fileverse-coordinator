@@ -1,21 +1,34 @@
-const axios = require('axios');
+function getPortalDetails(portal) {
+  let collaborators = [];
+  let members = [];
 
-async function getPortalDetailsFromAddress(portalMetadataIPFSHash) {
-  try {
-    const result = await Promise.any([
-      axios.get('https://w3s.link/ipfs/' + portalMetadataIPFSHash),
-      axios.get('https://ipfs.io/ipfs/' + portalMetadataIPFSHash),
-      axios.get('https://dweb.link/ipfs/' + portalMetadataIPFSHash),
-    ]);
-    const metadata = result?.data;
-    return {
-      name: metadata?.name,
-      logo: metadata?.logo,
-    };
-  } catch (err) {
-    console.error('Error during getting portal details', err);
-    return null;
+  if (portal?.members) {
+    portal.members.map((member) => {
+      if (
+        member.addedBlocknumber &&
+        member.addedBlocknumber > (member?.removedBlocknumber || 0)
+      ) {
+        members.push(member.address);
+      }
+    });
   }
+  if (portal?.collaborators) {
+    portal.collaborators.map((collaborator) => {
+      if (
+        collaborator.addedBlocknumber &&
+        collaborator.addedBlocknumber > (collaborator?.removedBlocknumber || 0)
+      ) {
+        collaborators.push(collaborator.address);
+      }
+    });
+  }
+
+  let membersAndCollabs = collaborators.concat(members);
+  return {
+    collaborators,
+    members,
+    membersAndCollabs,
+  };
 }
 
-module.exports = getPortalDetailsFromAddress;
+module.exports = getPortalDetails;

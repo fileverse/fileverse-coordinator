@@ -1,5 +1,5 @@
 const config = require('../../../../config');
-const getPortalDetailsFromAddress = require('../../../domain/portal/getPortalDetails');
+const getPortalMetadata = require('../../../domain/portal/getPortalMetadata');
 const isAccountPresent = require('../../../domain/portal/isAccountPresent');
 const {
   EventProcessor,
@@ -75,13 +75,13 @@ agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
             },
             {
               $set: {
-                'collaborators.removedBlocknumber': removedCollab.blocknumber,
+                'collaborators.$.removedBlocknumber': removedCollab.blocknumber,
               },
             },
             { upsert: true },
           );
         }
-        const portalDetails = await getPortalDetailsFromAddress(
+        const portalDetails = await getPortalMetadata(
           removedCollab.portalMetadataIPFSHash,
         );
 

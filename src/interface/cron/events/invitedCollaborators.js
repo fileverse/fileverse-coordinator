@@ -1,5 +1,5 @@
 const config = require('../../../../config');
-const getPortalDetailsFromAddress = require('../../../domain/portal/getPortalDetails');
+const getPortalMetadata = require('../../../domain/portal/getPortalMetadata');
 const {
   EventProcessor,
   Notification,
@@ -64,7 +64,7 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
           audience: 'individuals',
           forAddress: [invitedCollab.account],
         });
-        const portalDetails = await getPortalDetailsFromAddress(
+        const portalDetails = await getPortalMetadata(
           invitedCollab.portalAddress,
         );
         if (portalDetails) {

@@ -1,5 +1,6 @@
 const config = require('../../../../config');
 const getPortalDetails = require('../../../domain/portal/getPortalDetails');
+const getPortalMetadata = require('../../../domain/portal/getPortalMetadata');
 const isAccountPresent = require('../../../domain/portal/isAccountPresent');
 const {
   EventProcessor,
@@ -27,7 +28,7 @@ async function addCollaboratorToPortal(addedCollab) {
   );
 }
 
-async function createNotificationForAddCollaborator(addedCollab) {
+async function createNotificationForAddCollaborator(addedCollab, portal) {
   // Check if notification is alreay present
   const notificaitonPresent = await Notification.findOne({
     portalAddress: addedCollab.portalAddress,
@@ -42,12 +43,12 @@ async function createNotificationForAddCollaborator(addedCollab) {
     forAddress: addedCollab.account,
     type: 'collaboratorInvite',
   });
-
+  const collaborators = getPortalDetails(portal).collaborators;
   // Create a new notification.
   const notification = new Notification({
     portalAddress: addedCollab.portalAddress,
     audience: 'individuals',
-    forAddress: [addedCollab.account],
+    forAddress: collaborators,
     content: {
       by: addedCollab.by,
       transactionHash: addedCollab.transactionHash,
@@ -56,7 +57,7 @@ async function createNotificationForAddCollaborator(addedCollab) {
     type: 'collaboratorJoin',
   });
 
-  const portalDetails = await getPortalDetails(
+  const portalDetails = await getPortalMetadata(
     addedCollab.portalMetadataIPFSHash,
   );
   if (portalDetails) {
@@ -111,22 +112,20 @@ agenda.define(jobs.ADDED_COLLABORATOR_JOB, async (job, done) => {
           portal && isAccountPresent(portal.collaborators, addedCollab.account);
         if (!alreadyAddedCollab) {
           await addCollaboratorToPortal(addedCollab);
-          await createNotificationForAddCollaborator(addedCollab);
+          await createNotificationForAddCollaborator(addedCollab, portal);
         } else {
-          if (alreadyAddedCollab.removedBlockNumber) {
-            await Portal.updateOne(
-              {
-                portalAddress: addedCollab.portalAddress,
-                'collaborators.address': addedCollab.account,
+          await Portal.updateOne(
+            {
+              portalAddress: addedCollab.portalAddress,
+              'collaborators.address': addedCollab.account,
+            },
+            {
+              $set: {
+                'collaborators.$.addedBlocknumber': addedCollab.blockNumber,
               },
-              {
-                $set: {
-                  'collaborators.addedBlocknumber': addedCollab.blockNumber,
-                },
-              },
-              { upsert: true },
-            );
-          }
+            },
+            { upsert: true },
+          );
         }
       }),
     );

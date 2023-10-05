@@ -1,11 +1,10 @@
 const axios = require('axios');
+const getPortalDetails = require('../../portal/getPortalDetails');
 
 async function getFileDetails({ portal, fileTypeNumber, metadataIPFSHash }) {
-  let membersAndCollabs = [];
-  if (portal?.members)
-    membersAndCollabs = membersAndCollabs.concat(portal.members);
-  if (portal?.collaborators)
-    membersAndCollabs = membersAndCollabs.concat(portal.members);
+  const { collaborators, members, membersAndCollabs } =
+    getPortalDetails(portal);
+
   let audience = '';
   let forAddress = [];
   let fileType = '';
@@ -21,7 +20,7 @@ async function getFileDetails({ portal, fileTypeNumber, metadataIPFSHash }) {
       // private, collaborators only
       audience = 'collaborators_only';
       fileType = 'private';
-      forAddress = portal?.collaborators;
+      forAddress = collaborators;
       break;
     }
     case '2': {
@@ -35,7 +34,7 @@ async function getFileDetails({ portal, fileTypeNumber, metadataIPFSHash }) {
       // members
       audience = 'members_only';
       fileType = 'members only';
-      forAddress = portal?.members;
+      forAddress = members;
       break;
     }
     default: {
