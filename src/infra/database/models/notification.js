@@ -30,9 +30,12 @@ _notification.schema = new Schema({
       'collaboratorRemove',
       'memberJoin',
       'memberRemove',
+      'liveCollaborationInvite',
+      'fileMessage',
+      'dPageComment',
     ],
   },
-  blockNumber: { type: Number },
+  blockNumber: { type: Number, default: 0 },
   processed: { type: Boolean, default: false },
   timeStamp: { type: Date, required: true, default: Date.now },
 });

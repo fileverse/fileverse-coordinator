@@ -6,7 +6,7 @@ async function get({ address, read, offset, limit, portalAddress }) {
   const matchQuery = {};
   if (address) {
     address = address.toLowerCase();
-    matchQuery.forAddress = [address];
+    matchQuery.forAddress = address;
   }
 
   if (portalAddress) {

@@ -6,28 +6,32 @@ const createValidation = {
   body: Joi.object({
     type: Joi.string()
       .required()
-      .valid('liveCollabInvite', 'dPageComment', 'fileMessage'),
+      .valid('liveCollaborationInvite', 'dPageComment', 'fileMessage'),
     message: Joi.string().required(),
     forAddress: Joi.array(),
     audience: Joi.string().valid(
       'individuals',
       'members_only',
       'collaborators_only',
+      'public',
     ),
+    portalAddress: Joi.string().required(),
     content: Joi.object(),
   }),
 };
 
 async function create(req, res) {
-  const { type, message, forAddress, audience } = req.body;
+  const { type, message, forAddress, audience, portalAddress, content } =
+    req.body;
   const createdNotification = await Notification.createNotification({
     type,
     message,
     forAddress,
     audience,
     content,
+    portalAddress,
   });
-  res.json(data);
+  res.json(createdNotification);
 }
 
 module.exports = [validate(createValidation), create];
