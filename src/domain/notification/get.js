@@ -2,7 +2,12 @@ const axios = require('axios');
 const config = require('../../../config');
 const { Notification, Portal } = require('../../infra/database/models');
 const formatAddress = require('../portal/formatAddress');
-const NotificationTypes = require('./types');
+const {
+  ADD_FILE,
+  COLLABORATOR_INVITE,
+  COLLABORATOR_JOIN,
+  COLLABORATOR_REMOVE,
+} = require('./types');
 
 async function formatMessage(notification) {
   const portal = await Portal.findOne({
@@ -11,13 +16,12 @@ async function formatMessage(notification) {
   let message = notification.message;
   const portalName =
     portal && portal.name ? portal.name : notification.portalAddress;
-  if (notification.type === NotificationTypes.COLLABORATOR_INVITE) {
-    message = `${notification.content.by} invited you to become collaborator of portal "${portalName}"`;
-  } else if (notification.type === NotificationTypes.COLLABORATOR_JOIN) {
-    message = `${notification.content.account} joined the portal "${portalName}"`;
-  } else if (notification.type === NotificationTypes.COLLABORATOR_REMOVE) {
-    message = `${notification.content.account} were removed from portal "${portalName}"`;
-  } else if (notification.type === NotificationTypes.ADD_FILE) {
+  if (
+    notification.type === ADD_FILE ||
+    notification.type === COLLABORATOR_INVITE ||
+    notification.type === COLLABORATOR_JOIN ||
+    notification.type === COLLABORATOR_REMOVE
+  ) {
     // since portalName is the last word in the message, we just change it with new portal name
     let words = message.split(' ');
     words.pop();

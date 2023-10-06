@@ -1,4 +1,4 @@
-const NotificationTypes = {
+module.exports = {
   COLLABORATOR_INVITE: 'collaboratorInvite',
   COLLABORATOR_JOIN: 'collaboratorJoin',
   COLLABORATOR_REMOVE: 'collaboratorRemove',
@@ -19,5 +19,3 @@ const NotificationTypes = {
 };
 
 // @TODO: add this constant value everywhere instead of strings used.
-
-module.exports = NotificationTypes;

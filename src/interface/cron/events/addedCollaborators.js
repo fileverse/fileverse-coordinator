@@ -50,7 +50,6 @@ async function createNotificationForAddCollaborator(addedCollab, portal) {
     audience: 'individuals',
     forAddress: collaborators,
     content: {
-      by: addedCollab.by,
       transactionHash: addedCollab.transactionHash,
       account: addedCollab.account,
     },
