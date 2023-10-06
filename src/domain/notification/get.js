@@ -3,10 +3,10 @@ const config = require('../../../config');
 const { Notification, Portal } = require('../../infra/database/models');
 const formatAddress = require('../portal/formatAddress');
 const {
-  ADD_FILE,
   COLLABORATOR_INVITE,
-  COLLABORATOR_JOIN,
   COLLABORATOR_REMOVE,
+  COLLABORATOR_JOIN,
+  ADD_FILE,
 } = require('./types');
 
 async function formatMessage(notification) {
@@ -16,17 +16,35 @@ async function formatMessage(notification) {
   let message = notification.message;
   const portalName =
     portal && portal.name ? portal.name : notification.portalAddress;
-  if (
-    notification.type === ADD_FILE ||
-    notification.type === COLLABORATOR_INVITE ||
-    notification.type === COLLABORATOR_JOIN ||
-    notification.type === COLLABORATOR_REMOVE
-  ) {
-    // since portalName is the last word in the message, we just change it with new portal name
+  if (notification.type === COLLABORATOR_INVITE) {
+    message = `${notification.content.by} invited you to become collaborator of portal "${portalName}"`;
+  } else if (notification.type === COLLABORATOR_JOIN) {
+    if (notification.content.account) {
+      message = `${notification.content.account} joined the portal "${portalName}"`;
+    } else {
+      message =
+        notification.message.split(' ')[0] + ` joined the portal ${portalName}`;
+    }
+  } else if (notification.type === COLLABORATOR_REMOVE) {
+    if (notification.content.account && notification.content.by) {
+      message = `${notification.content.account} was removed from portal "${portalName}" by ${notification.content.by}`;
+    } else if (notification.content.account) {
+      message = `${notification.content.account} was removed from portal "${portalName}"`;
+    }
+  } else if (notification.type === ADD_FILE) {
+    // since portalName is the last word in the message, we just change it with new p
     let words = message.split(' ');
-    words.pop();
-    words.push(`"${portalName}"`);
-    message = words.join(' ');
+    let lastWord = words.pop();
+    while (words.length && lastWord !== 'to') {
+      lastWord = words.pop();
+    }
+    if (words.length != 0) {
+      words.push('to');
+      words.push(`"${portalName}"`);
+      message = words.join(' ');
+    } else {
+      message = notification.message;
+    }
   }
   notification.message = message;
   return notification;
@@ -55,17 +73,22 @@ async function get({ address, read, offset, limit, portalAddress }) {
     notifications.map(async (notification) => {
       notification = notification.safeObject();
       notification = await formatMessage(notification);
+      console.log({ notification });
       const words = notification.message.split(' ');
       let newWords = [];
+      console.log({ words });
       words.forEach((word, index) => {
         let newWord = word;
         if (word === address) {
           newWord = index === 0 ? 'You' : 'you';
         } else if (word.startsWith('0x')) {
           newWord = formatAddress(word);
+        } else if (index == 1 && word === 'was' && words[0] == address) {
+          newWord = 'were';
         }
         newWords.push(newWord);
       });
+
       notification.message = newWords.join(' ');
       return notification;
     }),
