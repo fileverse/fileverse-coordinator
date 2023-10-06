@@ -1,6 +1,26 @@
 const axios = require('axios');
 const getPortalDetails = require('../../portal/getPortalDetails');
 
+function getSource(sourceId) {
+  switch (sourceId) {
+    case 0: {
+      return 'file';
+    }
+    case 1: {
+      return 'whiteboard';
+    }
+    case 2: {
+      return 'dDoc';
+    }
+    case 3: {
+      return 'note';
+    }
+    case 4: {
+      return 'dPage';
+    }
+  }
+}
+
 async function getFileDetails({ portal, fileTypeNumber, metadataIPFSHash }) {
   const { collaborators, members, membersAndCollabs } =
     getPortalDetails(portal);
@@ -69,6 +89,7 @@ async function getFileDetails({ portal, fileTypeNumber, metadataIPFSHash }) {
       name: metadata?.name,
       mimeType: metadata?.mimeType,
       owner: metadata?.owner,
+      source: getSource(metadata.source),
     },
   };
 }
