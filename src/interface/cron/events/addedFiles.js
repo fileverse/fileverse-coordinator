@@ -38,7 +38,7 @@ function getNotificationType(whatSource) {
   }
 }
 
-function getMessage({
+function getFileAddMessage({
   whoAdded,
   whatTypeAdded,
   whatSource,
@@ -136,7 +136,7 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
           forAddress: fileDetails.forAddress,
           blockNumber: addFile.blockNumber,
           type: getNotificationType(fileDetails.metadata.source),
-          message: getMessage({
+          message: getFileAddMessage({
             whoAdded: addFile.by,
             whatTypeAdded: fileDetails.fileType,
             whatSource: fileDetails.metadata.source,

@@ -26,7 +26,7 @@ function getNotificationType(whatSource) {
   }
 }
 
-function getMessage({ whoEdited, whatSource, whatEdited }) {
+function getFileEditMessage({ whoEdited, whatSource, whatEdited }) {
   let message = '';
   if (whatSource === 'dPage') {
     if (whatEdited) {
@@ -123,7 +123,7 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
           forAddress: fileDetails.forAddress,
           blockNumber: editFile.blockNumber,
           type: getNotificationType(fileDetails.metadata.source),
-          message: getMessage({
+          message: getFileEditMessage({
             whoEdited: editFile.by,
             whatSource: fileDetails.metadata.source,
             whatEdited: fileDetails?.metadata?.name,
