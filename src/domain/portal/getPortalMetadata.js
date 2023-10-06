@@ -1,6 +1,8 @@
 const axios = require('axios');
 const { Portal } = require('../../infra/database/models');
 
+// Gets the portal metadata.
+// It returns metadata from db if present, otherwise gets the metadata from ipfs and stores the metadata in db.
 async function getPortalMetadata({ portal, portalMetadataIPFSHash }) {
   if (portal && portal.name && portal.logo) {
     return {

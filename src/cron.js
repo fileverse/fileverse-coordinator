@@ -20,12 +20,14 @@ async function graceful() {
     require('./interface/cron/events/invitedCollaborators');
     // require('./interface/cron/events/removedMembers');
     require('./interface/cron/events/removedCollaborators');
+    require('./interface/cron/events/editPortalData');
 
     await agenda.every('20 seconds', jobs.INVITED_COLLABORATOR_JOB);
     await agenda.every('20 seconds', jobs.ADDED_COLLABORATOR_JOB);
     await agenda.every('20 seconds', jobs.ADDED_FILE_JOB);
     await agenda.every('20 seconds', jobs.EDITED_FILE_JOB);
     await agenda.every('20 seconds', jobs.REMOVED_COLLABORATOR_JOB);
+    await agenda.every('20 seconds', jobs.EDITED_PORTAL_DATA);
   } catch (err) {
     console.log(err.stack);
     await graceful();

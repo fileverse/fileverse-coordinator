@@ -32,6 +32,10 @@ _eventProcessor.schema = new Schema({
     type: Number,
     default: 0,
   },
+  editPortal: {
+    type: Number,
+    default: 0,
+  },
   timeStamp: { type: Date, required: true, default: Date.now },
 });
 
