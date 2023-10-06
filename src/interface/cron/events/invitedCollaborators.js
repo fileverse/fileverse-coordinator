@@ -65,6 +65,9 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
           forAddress: [invitedCollab.account],
         });
         const portalDetails = await getPortalMetadata({
+          portal: {
+            portalAddress: invitedCollab.portalAddress,
+          },
           portalMetadataIPFSHash: invitedCollab.portalAddress,
         });
         if (portalDetails) {

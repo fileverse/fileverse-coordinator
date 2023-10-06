@@ -8,11 +8,53 @@ const {
   Notification,
 } = require('../../../infra/database/models');
 const getFileDetails = require('../../../domain/notification/file/getFileDetails');
-const getPortalDetailsFromAddress = require('../../../domain/portal/getPortalDetails');
-const getPortalDetails = require('../../../domain/portal/getPortalDetails');
 const getPortalMetadata = require('../../../domain/portal/getPortalMetadata');
+const formatAddress = require('../../../domain/portal/formatAddress');
 
 const apiURL = config.SUBGRAPH_API;
+
+function getNotificationType(whatSource) {
+  switch (whatSource) {
+    case 'dPage':
+      return 'dPageEdit';
+    case 'dDoc':
+      return 'dDocEdit';
+    case 'file':
+      return 'editFile';
+    case 'whiteboard':
+      return 'whiteboardEdit';
+  }
+}
+
+function getMessage({ whoEdited, whatSource, whatEdited }) {
+  let message = '';
+  if (whatSource === 'dPage') {
+    if (whatEdited) {
+      message = `${whoEdited} edited  "${whatEdited}" dPage`;
+    } else {
+      message = `${whoEdited} edited a dPage`;
+    }
+  } else if (whatSource === 'whiteboard') {
+    if (whatEdited) {
+      message = `${whoEdited} edited "${whatTypeAdded}" whiteboard`;
+    } else {
+      message = `${whoEdited} uploaded a whiteboard `;
+    }
+  } else if (whatSource === 'dDoc') {
+    if (whatEdited) {
+      message = `${whoEdited} edited "${whatEdited}" dDoc`;
+    } else {
+      message = `${whoEdited} edited a dDoc"`;
+    }
+  } else {
+    if (whatEdited) {
+      message = `${whoEdited} edited file "${whatEdited}"`;
+    } else {
+      message = `${whoEdited} edited a file`;
+    }
+  }
+  return message;
+}
 
 agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
   try {
@@ -80,14 +122,12 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
           audience: fileDetails.audience,
           forAddress: fileDetails.forAddress,
           blockNumber: editFile.blockNumber,
-          type: 'editFile',
-          message: `${editFile.by} edited the ${fileDetails.metadata.source} ${
-            prevFileMetadata ? prevFileMetadata.name : ''
-          } in portal "${
-            portalDetails && portalDetails.name
-              ? portalDetails.name
-              : editFile.portalAddress
-          }"`,
+          type: getNotificationType(fileDetails.metadata.source),
+          message: getMessage({
+            whoEdited: editFile.by,
+            whatSource: fileDetails.metadata.source,
+            whatEdited: fileDetails?.metadata?.name,
+          }),
           content: {
             by: editFile.by,
             metadataIPFSHash: editFile.metadataIPFSHash,
@@ -104,13 +144,11 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
           'bafybeify3xbts44jrrcidno7gxqs5fyvf5rbx3zkncnbjaibejjetvqtqe/metadata'
         ) {
           notif.type = 'deleteFile';
-          notif.message = `${editFile.by} deleted the file  ${
-            prevFileMetadata && prevFileMetadata.name
-              ? prevFileMetadata.name
-              : ''
-          } from portal ${
-            portalDetails ? portalDetails.name : editFile.portalAddress
-          }`;
+          let message = `${editFile.by} deleted the ${fileDetails.metadata.source}`;
+          if (prevFileMetadata && prevFileMetadata.name) {
+            message += ` "${prevFileMetadata.name}"`;
+          }
+          notif.message = message;
         }
 
         await notif.save();

@@ -9,6 +9,7 @@ const {
 } = require('../../../infra/database/models');
 const getFileDetails = require('../../../domain/notification/file/getFileDetails');
 const getPortalMetadata = require('../../../domain/portal/getPortalMetadata');
+const formatAddress = require('../../../domain/portal/formatAddress');
 
 const apiURL = config.SUBGRAPH_API;
 
@@ -22,6 +23,54 @@ async function notificationAlreadyPresent(addedFile) {
     return true;
   }
   return false;
+}
+
+function getNotificationType(whatSource) {
+  switch (whatSource) {
+    case 'dPage':
+      return 'dPagePublish';
+    case 'dDoc':
+      return 'dDocPublish';
+    case 'file':
+      return 'addFile';
+    case 'whiteboard':
+      return 'whiteboardPublish';
+  }
+}
+
+function getMessage({
+  whoAdded,
+  whatTypeAdded,
+  whatSource,
+  whatAdded,
+  onWhatPortal,
+}) {
+  let message = '';
+  if (whatSource === 'dPage') {
+    message = `${whoAdded} published a ${whatTypeAdded} dPage to "${onWhatPortal}"`;
+    if (!whatAdded) {
+      message += ` named "${whatAdded}"`;
+    }
+  } else if (whatSource === 'whiteboard') {
+    if (whatAdded) {
+      message = `${whoAdded} uploaded a ${whatTypeAdded} whiteboard "${whatAdded}" to "${onWhatPortal}"`;
+    } else {
+      message = `${whoAdded} uploaded a ${whatTypeAdded} whiteboard to "${onWhatPortal}"`;
+    }
+  } else if (whatSource === 'dDoc') {
+    if (whatAdded) {
+      message = `${whoAdded} uploaded a ${whatTypeAdded} dDoc "${whatAdded}" to "${onWhatPortal}"`;
+    } else {
+      message = `${whoAdded} uploaded a ${whatTypeAdded} dDoc to "${onWhatPortal}"`;
+    }
+  } else {
+    if (whatAdded) {
+      message = `${whoAdded} uploaded a ${whatTypeAdded} file "${whatAdded}" to "${onWhatPortal}"`;
+    } else {
+      message = `${whoAdded} uploaded a ${whatTypeAdded} file to "${onWhatPortal}"`;
+    }
+  }
+  return message;
 }
 
 agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
@@ -86,18 +135,16 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
           audience: fileDetails.audience,
           forAddress: fileDetails.forAddress,
           blockNumber: addFile.blockNumber,
-          type: 'addFile',
-          message: `${addFile.by} added ${fileDetails.fileType} ${
-            fileDetails.metadata.source
-          } ${
-            fileDetails.metadata && fileDetails.metadata.name
-              ? fileDetails.metadata.name
-              : ''
-          } in portal "${
-            portalDetails && portalDetails.name
+          type: getNotificationType(fileDetails.metadata.source),
+          message: getMessage({
+            whoAdded: addFile.by,
+            whatTypeAdded: fileDetails.fileType,
+            whatSource: fileDetails.metadata.source,
+            whatAdded: fileDetails?.metadata?.name,
+            onWhatPortal: portalDetails?.name
               ? portalDetails.name
-              : addFile.portalAddress
-          }"`,
+              : formatAddress(addFile.portalAddress),
+          }),
           content: {
             by: addFile.by,
             metadataIPFSHash: addFile.metadataIPFSHash,
