@@ -33,6 +33,8 @@ _notification.schema = new Schema({
       'liveCollaborationInvite',
       'fileMessage',
       'dPageComment',
+      'assetPublish',
+      'assetEdit'
     ],
   },
   blockNumber: { type: Number, default: 0 },

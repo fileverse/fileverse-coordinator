@@ -6,7 +6,13 @@ const createValidation = {
   body: Joi.object({
     type: Joi.string()
       .required()
-      .valid('liveCollaborationInvite', 'dPageComment', 'fileMessage'),
+      .valid(
+        'liveCollaborationInvite',
+        'dPageComment',
+        'fileMessage',
+        'assetPublish',
+        'assetEdit',
+      ),
     message: Joi.string().required(),
     forAddress: Joi.array(),
     audience: Joi.string().valid(

@@ -13,13 +13,13 @@ const getValidation = {
 };
 
 async function get(req, res) {
-  const { invokerAddress, portalAddress, offset, limit } = req.query;
+  const { portalAddress, offset, limit } = req.query;
   let isRead = req.query.isRead;
   if (isRead) {
     isRead = isRead === 'true' ? true : false;
   }
   const notifications = await notification.get({
-    address: invokerAddress,
+    address: req.invokerAddress,
     portalAddress: portalAddress,
     offset,
     limit,
