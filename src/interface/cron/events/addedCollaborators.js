@@ -52,6 +52,7 @@ async function createNotificationForAddCollaborator(addedCollab, portal) {
     content: {
       by: addedCollab.by,
       transactionHash: addedCollab.transactionHash,
+      account: addedCollab.account,
     },
     blockNumber: addedCollab.blockNumber,
     type: 'collaboratorJoin',
@@ -62,10 +63,11 @@ async function createNotificationForAddCollaborator(addedCollab, portal) {
     portalMetadataIPFSHash: addedCollab.portalMetadataIPFSHash,
   });
   if (portalDetails) {
-    notification.message = `${addedCollab.account} joined the portal ${portalDetails.name}`;
+    notification.message = `${addedCollab.account} joined the portal "${portalDetails.name}"`;
     notification.content.portalLogo = portalDetails.logo;
+    notification.content.portalName = portalDetails.name;
   } else {
-    notification.message = `${addedCollab.account} joined the portal ${addedCollab.portalAddress}`;
+    notification.message = `${addedCollab.account} joined the portal "${addedCollab.portalAddress}"`;
   }
   await notification.save();
 }

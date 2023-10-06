@@ -87,21 +87,25 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
           forAddress: fileDetails.forAddress,
           blockNumber: addFile.blockNumber,
           type: 'addFile',
-          message: `${addFile.by} added ${fileDetails.fileType} file ${
+          message: `${addFile.by} added ${fileDetails.fileType} ${
+            fileDetails.metadata.source
+          } ${
             fileDetails.metadata && fileDetails.metadata.name
               ? fileDetails.metadata.name
               : ''
-          } in portal ${
+          } in portal "${
             portalDetails && portalDetails.name
               ? portalDetails.name
               : addFile.portalAddress
-          }`,
+          }"`,
           content: {
             by: addFile.by,
             metadataIPFSHash: addFile.metadataIPFSHash,
             fileType: addFile.fileType,
             fileMetadata: fileDetails.metadata,
             fileId: addFile.fileId,
+            portalLogo: portalDetails.logo,
+            portalName: portalDetails.name,
           },
         });
         await notif.save();

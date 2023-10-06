@@ -68,10 +68,11 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
           portalMetadataIPFSHash: invitedCollab.portalAddress,
         });
         if (portalDetails) {
-          notif.message = `${invitedCollab.by} invited you to become a collaborator of the portal ${portalDetails.name}`;
+          notif.message = `${invitedCollab.by} invited you to become a collaborator of the portal "${portalDetails.name}"`;
           notif.content.portalLogo = portalDetails.logo;
+          notif.content.portalName = portalDetails.name;
         } else {
-          notif.message = `${invitedCollab.by} invited you to become a collaborator of the portal ${invitedCollab.portalAddress}`;
+          notif.message = `${invitedCollab.by} invited you to become a collaborator of the portal "${invitedCollab.portalAddress}"`;
         }
         await notif.save();
       }),

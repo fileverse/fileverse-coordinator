@@ -101,6 +101,7 @@ agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
             by: removedCollab.by,
             account: removedCollab.account,
             portalLogo: portalDetails?.logo,
+            portalName: portalDetails?.name,
           },
           message: `${removedCollab.account} were removed from portal ${
             portalDetails && portalDetails.name

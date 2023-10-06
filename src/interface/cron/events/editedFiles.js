@@ -81,18 +81,21 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
           forAddress: fileDetails.forAddress,
           blockNumber: editFile.blockNumber,
           type: 'editFile',
-          message: `${editFile.by} edited the file ${
+          message: `${editFile.by} edited the ${fileDetails.metadata.source} ${
             prevFileMetadata ? prevFileMetadata.name : ''
-          } in portal ${
+          } in portal "${
             portalDetails && portalDetails.name
               ? portalDetails.name
               : editFile.portalAddress
-          }`,
+          }"`,
           content: {
             by: editFile.by,
             metadataIPFSHash: editFile.metadataIPFSHash,
             fileType: editFile.fileType,
             fileMetadata: fileDetails.metadata,
+            fileId: editFile.fileId,
+            portalLogo: portal.logo,
+            portalName: portal.name,
           },
         });
 
