@@ -25,6 +25,7 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
           by,
           blockNumber,
           account,
+          portalMetadataIPFSHash
         }
       }`,
     });
@@ -68,7 +69,7 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
           portal: {
             portalAddress: invitedCollab.portalAddress,
           },
-          portalMetadataIPFSHash: invitedCollab.portalAddress,
+          portalMetadataIPFSHash: invitedCollab.portalMetadataIPFSHash,
         });
         if (portalDetails) {
           notif.message = `${invitedCollab.by} invited you to become a collaborator of the portal "${portalDetails.name}"`;
