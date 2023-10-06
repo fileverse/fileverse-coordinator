@@ -57,9 +57,10 @@ async function createNotificationForAddCollaborator(addedCollab, portal) {
     type: 'collaboratorJoin',
   });
 
-  const portalDetails = await getPortalMetadata(
-    addedCollab.portalMetadataIPFSHash,
-  );
+  const portalDetails = await getPortalMetadata({
+    portal,
+    portalMetadataIPFSHash: addedCollab.portalMetadataIPFSHash,
+  });
   if (portalDetails) {
     notification.message = `${addedCollab.account} joined the portal ${portalDetails.name}`;
     notification.content.portalLogo = portalDetails.logo;

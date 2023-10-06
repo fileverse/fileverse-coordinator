@@ -81,9 +81,10 @@ agenda.define(jobs.REMOVED_COLLABORATOR_JOB, async (job, done) => {
             { upsert: true },
           );
         }
-        const portalDetails = await getPortalMetadata(
-          removedCollab.portalMetadataIPFSHash,
-        );
+        const portalDetails = await getPortalMetadata({
+          portal,
+          portalMetadataIPFSHash: removedCollab.portalMetadataIPFSHash,
+        });
 
         // Delete the collaboratorInvite and collaboratorJoin Notification
         await Notification.deleteMany({

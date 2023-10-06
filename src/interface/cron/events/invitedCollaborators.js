@@ -64,9 +64,9 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
           audience: 'individuals',
           forAddress: [invitedCollab.account],
         });
-        const portalDetails = await getPortalMetadata(
-          invitedCollab.portalAddress,
-        );
+        const portalDetails = await getPortalMetadata({
+          portalMetadataIPFSHash: invitedCollab.portalAddress,
+        });
         if (portalDetails) {
           notif.message = `${invitedCollab.by} invited you to become a collaborator of the portal ${portalDetails.name}`;
           notif.content.portalLogo = portalDetails.logo;

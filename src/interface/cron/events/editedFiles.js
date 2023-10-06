@@ -9,6 +9,8 @@ const {
 } = require('../../../infra/database/models');
 const getFileDetails = require('../../../domain/notification/file/getFileDetails');
 const getPortalDetailsFromAddress = require('../../../domain/portal/getPortalDetails');
+const getPortalDetails = require('../../../domain/portal/getPortalDetails');
+const getPortalMetadata = require('../../../domain/portal/getPortalMetadata');
 
 const apiURL = config.SUBGRAPH_API;
 
@@ -64,9 +66,10 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
         const prevFileMetadata =
           notifications.length && notifications[0]?.content?.fileMetadata;
 
-        const portalDetails = await getPortalDetailsFromAddress(
-          editFile.portalMetadataIPFSHash,
-        );
+        const portalDetails = await getPortalMetadata({
+          portal,
+          portalMetadataIPFSHash: editFile.portalMetadataIPFSHash,
+        });
 
         if (!fileDetails.forAddress.includes(editFile.by)) {
           fileDetails.forAddress.push(editFile.by);
@@ -81,7 +84,9 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
           message: `${editFile.by} edited the file ${
             prevFileMetadata ? prevFileMetadata.name : ''
           } in portal ${
-            portalDetails ? portalDetails.name : editFile.portalAddress
+            portalDetails && portalDetails.name
+              ? portalDetails.name
+              : editFile.portalAddress
           }`,
           content: {
             by: editFile.by,

@@ -7,8 +7,8 @@ const {
   Portal,
   Notification,
 } = require('../../../infra/database/models');
-const getPortalDetailsFromAddress = require('../../../domain/portal/getPortalDetails');
 const getFileDetails = require('../../../domain/notification/file/getFileDetails');
+const getPortalMetadata = require('../../../domain/portal/getPortalMetadata');
 
 const apiURL = config.SUBGRAPH_API;
 
@@ -72,9 +72,10 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
           metadataIPFSHash: addFile.metadataIPFSHash,
         });
 
-        const portalDetails = await getPortalDetailsFromAddress(
-          addFile.portalMetadataIPFSHash,
-        );
+        const portalDetails = await getPortalMetadata({
+          portal,
+          portalMetadataIPFSHash: addFile.portalMetadataIPFSHash,
+        });
 
         if (!fileDetails.forAddress.includes(addFile.by)) {
           fileDetails.forAddress.push(addFile.by);
@@ -91,7 +92,9 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
               ? fileDetails.metadata.name
               : ''
           } in portal ${
-            portalDetails ? portalDetails.name : addFile.portalAddress
+            portalDetails && portalDetails.name
+              ? portalDetails.name
+              : addFile.portalAddress
           }`,
           content: {
             by: addFile.by,

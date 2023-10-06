@@ -23,6 +23,12 @@ _portal.schema = new Schema({
     trim: true,
     lowercase: true,
   },
+  portalMetadataIPFSHash: {
+    type: String,
+    trim: true,
+  },
+  name: { type: String },
+  logo: { type: String },
   members: [_accountSchema],
   collaborators: [_accountSchema],
 });
