@@ -36,7 +36,7 @@ function getMessage({ whoEdited, whatSource, whatEdited }) {
     }
   } else if (whatSource === 'whiteboard') {
     if (whatEdited) {
-      message = `${whoEdited} edited "${whatTypeAdded}" whiteboard`;
+      message = `${whoEdited} edited "${whatEdited}" whiteboard`;
     } else {
       message = `${whoEdited} uploaded a whiteboard `;
     }
