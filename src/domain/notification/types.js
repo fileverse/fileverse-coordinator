@@ -14,7 +14,7 @@ module.exports = {
   WHITEBOARD_EDIT: 'whiteboardEdit',
   DPAGE_PUBLISH: 'dPagePublish',
   DPAGE_EDIT: 'dPageEdit',
-  DPAGE_PUBLISH: 'dDocPublish',
+  DDOC_PUBLISH: 'dDocPublish',
   DDOC_EDIT: 'dDocEdit',
 };
 

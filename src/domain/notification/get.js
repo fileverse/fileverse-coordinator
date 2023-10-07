@@ -7,6 +7,9 @@ const {
   COLLABORATOR_REMOVE,
   COLLABORATOR_JOIN,
   ADD_FILE,
+  DPAGE_PUBLISH,
+  DDOC_PUBLISH,
+  WHITEBOARD_PUBLISH,
 } = require('./types');
 
 async function formatMessage(notification) {
@@ -31,7 +34,12 @@ async function formatMessage(notification) {
     } else if (notification.content.account) {
       message = `${notification.content.account} was removed from portal "${portalName}"`;
     }
-  } else if (notification.type === ADD_FILE) {
+  } else if (
+    notification.type === ADD_FILE ||
+    notification.type === DPAGE_PUBLISH ||
+    notification.type === DDOC_PUBLISH ||
+    notification.type === WHITEBOARD_PUBLISH
+  ) {
     // since portalName is the last word in the message, we just change it with new p
     let words = message.split(' ');
     let lastWord = words.pop();
