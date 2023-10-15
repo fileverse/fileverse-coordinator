@@ -1,25 +1,19 @@
-const config = require('../../../../config');
-const getPortalMetadata = require('../../../domain/portal/getPortalMetadata');
+const config = require("../../../../config");
+const getPortalMetadata = require("../../../domain/portal/getPortalMetadata");
 const {
   EventProcessor,
   Notification,
-} = require('../../../infra/database/models');
-const agenda = require('./../index');
-const jobs = require('./../jobs');
-const axios = require('axios');
+} = require("../../../infra/database/models");
+const agenda = require("./../index");
+const jobs = require("./../jobs");
+const axios = require("axios");
 
 const apiURL = config.SUBGRAPH_API;
 
-agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
-  try {
-    const eventProcessed = await EventProcessor.findOne({});
-    let invitedCollabCheckpt = 0;
-    if (eventProcessed) {
-      invitedCollabCheckpt = eventProcessed.invitedCollaborator;
-    }
-    const eventName = 'addedCollaborators';
-    const invitedCollabResult = await axios.post(apiURL, {
-      query: `{
+async function fetchInvitedCollaborators(invitedCollabCheckpt) {
+  const eventName = "addedCollaborators";
+  const response = await axios.post(apiURL, {
+    query: `{
       ${eventName}(first: 5, orderDirection: asc, orderBy: blockNumber, where: {blockNumber_gt : ${invitedCollabCheckpt}}) {
           portalAddress,
           by,
@@ -28,80 +22,99 @@ agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
           portalMetadataIPFSHash
         }
       }`,
-    });
+  });
+  return response?.data?.data[eventName];
+}
 
-    const data = invitedCollabResult?.data?.data;
-    const invitedCollabs = data[eventName];
+async function createNotificationForInvitedCollaborator(invitedCollab) {
+  const joinedOrAlreadyNotified = await Notification.findOne({
+    portalAddress: invitedCollab.portalAddress,
+    forAddress: invitedCollab.account,
+    $or: [{ type: "collaboratorInvite" }, { type: "collaboratorJoin" }],
+    blockNumber: { $lt: invitedCollab.blockNumber },
+  });
 
-    let newInvitedCollabCheckpt = null;
-    if (invitedCollabs && invitedCollabs.length) {
-      newInvitedCollabCheckpt = invitedCollabs.slice(-1)[0].blockNumber;
-    }
+  if (joinedOrAlreadyNotified) return;
+
+  const notif = new Notification({
+    portalAddress: invitedCollab.portalAddress,
+    content: {
+      by: invitedCollab.by,
+    },
+    blockNumber: invitedCollab.blockNumber,
+    type: "collaboratorInvite",
+    audience: "individuals",
+    forAddress: [invitedCollab.account],
+  });
+
+  const portalDetails = await getPortalMetadata({
+    portal: {
+      portalAddress: invitedCollab.portalAddress,
+    },
+    portalMetadataIPFSHash: invitedCollab.portalMetadataIPFSHash,
+  });
+
+  if (portalDetails) {
+    notif.message = `${invitedCollab.by} invited you to become a collaborator of the portal "${portalDetails.name}"`;
+    notif.content.portalLogo = portalDetails.logo;
+    notif.content.portalName = portalDetails.name;
+  } else {
+    notif.message = `${invitedCollab.by} invited you to become a collaborator of the portal "${invitedCollab.portalAddress}"`;
+  }
+
+  await notif.save();
+}
+
+async function updateEventProcessorCheckpoint(newCheckpoint) {
+  if (newCheckpoint) {
+    await EventProcessor.updateOne(
+      {},
+      {
+        $set: {
+          invitedCollaborator: newCheckpoint,
+        },
+      },
+      { upsert: true }
+    );
+  }
+}
+
+agenda.define(jobs.INVITED_COLLABORATOR_JOB, async (job, done) => {
+  try {
+    const eventProcessed = await EventProcessor.findOne({});
+    const invitedCollabCheckpt = eventProcessed
+      ? eventProcessed.invitedCollaborator
+      : 0;
+
+    const invitedCollabs = await fetchInvitedCollaborators(
+      invitedCollabCheckpt
+    );
+    const newInvitedCollabCheckpt =
+      invitedCollabs && invitedCollabs.length
+        ? invitedCollabs.slice(-1)[0].blockNumber
+        : null;
 
     console.log(
-      'Recieved entries',
+      "Received entries",
       jobs.INVITED_COLLABORATOR_JOB,
-      invitedCollabs.length,
+      invitedCollabs.length
     );
 
     await Promise.all(
-      invitedCollabs.map(async (invitedCollab) => {
-        const joinedOrAlreadyNotified = await Notification.findOne({
-          portalAddress: invitedCollab.portalAddress,
-          forAddress: invitedCollab.account,
-          $or: [{ type: 'collaboratorInvite' }, { type: 'collaboratorJoin' }],
-          blockNumber: { $lt: invitedCollab.blockNumber },
-        });
-
-        if (joinedOrAlreadyNotified) return;
-
-        const notif = new Notification({
-          portalAddress: invitedCollab.portalAddress,
-          content: {
-            by: invitedCollab.by,
-          },
-          blockNumber: invitedCollab.blockNumber,
-          type: 'collaboratorInvite',
-          audience: 'individuals',
-          forAddress: [invitedCollab.account],
-        });
-        const portalDetails = await getPortalMetadata({
-          portal: {
-            portalAddress: invitedCollab.portalAddress,
-          },
-          portalMetadataIPFSHash: invitedCollab.portalMetadataIPFSHash,
-        });
-        if (portalDetails) {
-          notif.message = `${invitedCollab.by} invited you to become a collaborator of the portal "${portalDetails.name}"`;
-          notif.content.portalLogo = portalDetails.logo;
-          notif.content.portalName = portalDetails.name;
-        } else {
-          notif.message = `${invitedCollab.by} invited you to become a collaborator of the portal "${invitedCollab.portalAddress}"`;
-        }
-        await notif.save();
-      }),
+      invitedCollabs.map(createNotificationForInvitedCollaborator)
     );
 
-    if (newInvitedCollabCheckpt) {
-      await EventProcessor.updateOne(
-        {},
-        {
-          $set: {
-            invitedCollaborator: newInvitedCollabCheckpt,
-          },
-        },
-        { upsert: true },
-      );
-    }
+    await updateEventProcessorCheckpoint(newInvitedCollabCheckpt);
+
     done();
   } catch (err) {
     console.error(
-      'Error in invited Collaborators',
+      "Error in invited Collaborators",
       jobs.INVITED_COLLABORATOR_JOB,
-      err,
+      err
     );
     done(err);
   } finally {
-    console.log('Job done', jobs.INVITED_COLLABORATOR_JOB);
+    console.log("Job done", jobs.INVITED_COLLABORATOR_JOB);
   }
 });

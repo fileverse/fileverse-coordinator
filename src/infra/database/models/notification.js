@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 const _notification = {};
@@ -12,33 +12,37 @@ _notification.schema = new Schema({
   forAddress: [{ type: String, lowercase: true, trim: true }],
   audience: {
     type: String,
-    enum: ['collaborators_only', 'members_only', 'individuals', 'public'],
+    enum: ["collaborators_only", "members_only", "individuals", "public"],
   },
   content: {
     type: Object,
     trim: true,
   },
+  action: {
+    type: Boolean,
+    default: true,
+  },
   message: { type: String, trim: true },
   type: {
     type: String,
     enum: [
-      'addFile',
-      'editFile',
-      'deleteFile',
-      'collaboratorJoin',
-      'collaboratorInvite',
-      'collaboratorRemove',
-      'memberJoin',
-      'memberRemove',
-      'liveCollaborationInvite',
-      'fileMessage',
-      'dPageComment',
-      'whiteboardPublish',
-      'whiteboardEdit',
-      'dPagePublish',
-      'dPageEdit',
-      'dDocPublish',
-      'dDocEdit',
+      "addFile",
+      "editFile",
+      "deleteFile",
+      "collaboratorJoin",
+      "collaboratorInvite",
+      "collaboratorRemove",
+      "memberJoin",
+      "memberRemove",
+      "liveCollaborationInvite",
+      "fileMessage",
+      "dPageComment",
+      "whiteboardPublish",
+      "whiteboardEdit",
+      "dPagePublish",
+      "dPageEdit",
+      "dDocPublish",
+      "dDocEdit",
     ],
   },
   blockNumber: { type: Number, default: 0 },
@@ -46,23 +50,23 @@ _notification.schema = new Schema({
   timeStamp: { type: Date, required: true, default: Date.now },
 });
 
-_notification.schema.pre('save', function (next) {
+_notification.schema.pre("save", function (next) {
   this.timeStamp = Date.now();
   next();
 });
 
 _notification.schema.methods.safeObject = function () {
   const safeFields = [
-    '_id',
-    'portalAddress',
-    'forAddress',
-    'audience',
-    'content',
-    'processed',
-    'timeStamp',
-    'type',
-    'message',
-    'blockNumber',
+    "_id",
+    "portalAddress",
+    "forAddress",
+    "audience",
+    "content",
+    "processed",
+    "timeStamp",
+    "type",
+    "message",
+    "blockNumber",
   ];
   const newSafeObject = {};
   safeFields.forEach((elem) => {
@@ -72,6 +76,6 @@ _notification.schema.methods.safeObject = function () {
   return newSafeObject;
 };
 
-_notification.model = mongoose.model('notifications', _notification.schema);
+_notification.model = mongoose.model("notifications", _notification.schema);
 
 module.exports = _notification;
