@@ -29,23 +29,44 @@ async function addCollaboratorToPortal(addedCollab) {
 }
 
 async function createNotificationForAddCollaborator(addedCollab, portal) {
-  // Check if notification is alreay present
-  const notificaitonPresent = await Notification.findOne({
+  const notificationExists = await isNotificationPresent(addedCollab);
+
+  if (notificationExists) return;
+
+  await updateCollaboratorInviteNotifications(addedCollab);
+
+  const collaborators = getPortalDetails(portal).collaborators;
+  const notification = buildNotificationObject(addedCollab, collaborators);
+  
+  const portalDetails = await getPortalMetadata({
+    portal,
+    portalMetadataIPFSHash: addedCollab.portalMetadataIPFSHash,
+  });
+
+  notification.message = constructNotificationMessage(addedCollab, portalDetails);
+  await notification.save();
+}
+
+async function isNotificationPresent(addedCollab) {
+  return await Notification.findOne({
     portalAddress: addedCollab.portalAddress,
     blockNumber: addedCollab.blockNumber,
     type: 'collaboratorJoin',
   });
-  if (notificaitonPresent) return;
+}
 
-  // Delete the notification for collaboratorInvite
-  await Notification.deleteMany({
+async function updateCollaboratorInviteNotifications(addedCollab) {
+  await Notification.updateMany({
     portalAddress: addedCollab.portalAddress,
     forAddress: addedCollab.account,
     type: 'collaboratorInvite',
+  }, {
+    $set: { action: false }
   });
-  const collaborators = getPortalDetails(portal).collaborators;
-  // Create a new notification.
-  const notification = new Notification({
+}
+
+function buildNotificationObject(addedCollab, collaborators) {
+  return new Notification({
     portalAddress: addedCollab.portalAddress,
     audience: 'individuals',
     forAddress: collaborators,
@@ -56,19 +77,14 @@ async function createNotificationForAddCollaborator(addedCollab, portal) {
     blockNumber: addedCollab.blockNumber,
     type: 'collaboratorJoin',
   });
+}
 
-  const portalDetails = await getPortalMetadata({
-    portal,
-    portalMetadataIPFSHash: addedCollab.portalMetadataIPFSHash,
-  });
+function constructNotificationMessage(addedCollab, portalDetails) {
   if (portalDetails) {
-    notification.message = `${addedCollab.account} joined the portal "${portalDetails.name}"`;
-    notification.content.portalLogo = portalDetails.logo;
-    notification.content.portalName = portalDetails.name;
+    return `${addedCollab.account} joined the portal "${portalDetails.name}"`;
   } else {
-    notification.message = `${addedCollab.account} joined the portal "${addedCollab.portalAddress}"`;
+    return `${addedCollab.account} joined the portal "${addedCollab.portalAddress}"`;
   }
-  await notification.save();
 }
 
 agenda.define(jobs.ADDED_COLLABORATOR_JOB, async (job, done) => {
@@ -81,7 +97,7 @@ agenda.define(jobs.ADDED_COLLABORATOR_JOB, async (job, done) => {
     const eventName = 'registeredCollaboratorKeys';
     const addedCollabResult = await axios.post(apiURL, {
       query: `{
-      ${eventName}(first: 5, orderDirection: asc, orderBy: blockNumber, where: {blockNumber_gt: ${addedCollabCheckpt} }) {
+        ${eventName}(first: 5, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gt: ${addedCollabCheckpt} }) {
           portalAddress,
           blockNumber,
           account,

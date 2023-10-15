@@ -63,6 +63,7 @@ _notification.schema.methods.safeObject = function () {
     "audience",
     "content",
     "processed",
+    "action",
     "timeStamp",
     "type",
     "message",
