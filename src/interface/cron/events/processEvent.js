@@ -60,6 +60,7 @@ async function processRegisteredCollaboratorKeysEvent({
 }) {
   const latestPortal = await Portal.getPortal({ portalAddress });
   latestPortal.collaborators.map(async ({ address }) => {
+    if (by === address) return;
     // create notification for each collaborator
     await createNotification({
       portalAddress: latestPortal.portalAddress,
