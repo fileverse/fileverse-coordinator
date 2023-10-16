@@ -1,27 +1,18 @@
-const { Notification, Portal } = require('../../infra/database/models');
-const _errorHandler = require('../../infra/errorHandler');
-
-const getPortalDetails = require('../portal/getPortalDetails');
-
-async function getProtal({ portalAddress }) {
-  const portal = await Portal.findOne({ portalAddress });
-  return portal;
-}
+const { Notification } = require('../../infra/database/models');
 
 async function create({
+  portalId,
+  portalAddress,
   audience,
   forAddress,
   message,
+  messageVars,
   content,
   type,
-  portalAddress,
+  by,
+  blockNumber,
+  blockTimestamp,
 }) {
-  const portalDetails = getPortalDetails(portal);
-
-  if (audience === 'collaborators_only') {
-    forAddress = portalDetails.collaborators;
-  }
-
   const notification = new Notification({
     audience,
     forAddress,
@@ -29,6 +20,11 @@ async function create({
     type,
     message,
     portalAddress: portalAddress.toLowerCase(),
+    portalId,
+    messageVars,
+    by,
+    blockNumber,
+    blockTimestamp,
   });
   await notification.save();
   return notification;

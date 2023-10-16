@@ -50,6 +50,7 @@ async function fetchRegisteredCollaboratorKeyEvents(checkpoint) {
           portalAddress,
           blockNumber,
           account,
+          blockTimestamp,
         }
       }`,
   });

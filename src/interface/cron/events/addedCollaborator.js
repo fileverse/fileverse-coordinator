@@ -48,6 +48,7 @@ async function fetchAddedCollaboratorEvents(checkpoint) {
           by,
           blockNumber,
           account,
+          blockTimestamp,
         }
       }`,
   });

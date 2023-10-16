@@ -3,6 +3,7 @@ const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
+const processEvent = require('./processEvent');
 
 const API_URL = config.SUBGRAPH_API;
 const EVENT_NAME = "removedCollaborators";
@@ -49,6 +50,7 @@ async function fetchRemovedCollaboratorEvents(checkpoint) {
           portalAddress,
           by,
           blockNumber,
+          blockTimestamp,
           account,
         }
       }`,

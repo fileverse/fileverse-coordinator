@@ -1,6 +1,6 @@
 module.exports = {
   get: require('./get'),
-  createNotification: require('./create'),
+  create: require('./create'),
   process: require('./process'),
   unread: require('./unread'),
 };

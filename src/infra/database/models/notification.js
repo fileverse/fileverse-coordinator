@@ -3,14 +3,30 @@ const { Schema } = mongoose;
 
 const _notification = {};
 
+const MessageVars = new Schema({
+  name: { type: String },
+  value: { type: String },
+});
+
 _notification.schema = new Schema({
-  portalId: { type: Schema.Types.ObjectId },
+  portalId: { type: Schema.Types.ObjectId, ref: 'portals' },
   portalAddress: {
     type: String,
     lowercase: true,
     trim: true,
+    index: true,
   },
-  forAddress: [{ type: String, lowercase: true, trim: true }],
+  forAddress: {
+    type: String,
+    lowercase: true,
+    trim: true,
+    index: true,
+  },
+  by: {
+    type: String,
+    lowercase: true,
+    trim: true,
+  },
   audience: {
     type: String,
     enum: ["collaborators_only", "members_only", "individuals", "public"],
@@ -24,6 +40,7 @@ _notification.schema = new Schema({
     default: true,
   },
   message: { type: String, trim: true },
+  messageVars: [MessageVars],
   type: {
     type: String,
     enum: [
@@ -47,6 +64,7 @@ _notification.schema = new Schema({
     ],
   },
   blockNumber: { type: Number, default: 0 },
+  blockTimestamp: { type: Number, default: 0 },
   processed: { type: Boolean, default: false },
   timeStamp: { type: Date, required: true, default: Date.now },
 });
@@ -68,7 +86,9 @@ _notification.schema.methods.safeObject = function () {
     "timeStamp",
     "type",
     "message",
+    "by",
     "blockNumber",
+    "blockTimestamp",
   ];
   const newSafeObject = {};
   safeFields.forEach((elem) => {

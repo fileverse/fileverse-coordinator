@@ -29,7 +29,7 @@ const createValidation = {
 async function create(req, res) {
   const { type, message, forAddress, audience, portalAddress, content } =
     req.body;
-  const createdNotification = await Notification.createNotification({
+  const createdNotification = await Notification.create({
     type,
     message,
     forAddress,
