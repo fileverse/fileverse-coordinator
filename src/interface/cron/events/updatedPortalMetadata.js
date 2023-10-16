@@ -65,7 +65,9 @@ async function processUpdatedPortalMetadataEvent(updatedPortalMetadata) {
       portalAddress: updatedPortalMetadata.portalAddress,
       blockNumber: updatedPortalMetadata.blockNumber,
     });
-    await event.save();  
+    await event.save();
+    // update data in portal collection
+    // send notification that portal metadata was updated to collaborators
   } catch (err) {
     console.log(err);
   }

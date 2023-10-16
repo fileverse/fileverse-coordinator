@@ -68,6 +68,7 @@ async function processRegisteredCollaboratorKeyEvent(
       blockNumber: registeredCollaboratorKey.blockNumber,
     });
     await event.save();
+    // send notification of someone new just joined portal to the portal collaborators
   } catch (err) {
     console.log(err);
   }

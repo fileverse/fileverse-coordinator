@@ -66,6 +66,7 @@ async function processRemovedCollaboratorEvent(removedCollaborator) {
       blockNumber: removedCollaborator.blockNumber,
     });
     await event.save();
+    // send notification of someone removed a collaborator from portal to portal collaborators
   } catch (err) {
     console.log(err);
   }

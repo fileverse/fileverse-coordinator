@@ -18,10 +18,10 @@ async function graceful() {
     require('./interface/cron/events/updatedPortalMetadata');
     require('./interface/cron/events/mint');
 
-    await agenda.every('20 seconds', jobs.ADDED_COLLABORATOR);
-    await agenda.every('20 seconds', jobs.REGISTERED_COLLABORATOR_KEY);
     await agenda.every('20 seconds', jobs.ADDED_FILE);
     await agenda.every('20 seconds', jobs.EDITED_FILE);
+    await agenda.every('20 seconds', jobs.ADDED_COLLABORATOR);
+    await agenda.every('20 seconds', jobs.REGISTERED_COLLABORATOR_KEY);
     await agenda.every('20 seconds', jobs.REMOVED_COLLABORATOR);
     await agenda.every('20 seconds', jobs.UPDATED_PORTAL_METADATA);
     await agenda.every('20 seconds', jobs.MINT);

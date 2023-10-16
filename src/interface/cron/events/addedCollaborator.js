@@ -64,6 +64,8 @@ async function processAddedCollaboratorEvent(addedCollaborator) {
       blockNumber: addedCollaborator.blockNumber,
     });
     await event.save();
+    // add collaborator to portal collection 
+    // send individual notification to the collaborator 
   } catch (err) {
     console.log(err);
   }

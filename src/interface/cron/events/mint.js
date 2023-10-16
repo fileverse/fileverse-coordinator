@@ -58,6 +58,7 @@ async function processMintEvent(mint) {
       blockNumber: mint.blockNumber,
     });
     await event.save();
+    // create data in portal collection
   } catch (err) {
     console.log(err);
   }
