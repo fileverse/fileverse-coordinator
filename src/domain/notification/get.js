@@ -1,5 +1,5 @@
 const { Notification } = require('../../infra/database/models');
-const formatMessage = require('../portal/formatMessage');
+const formatMessage = require('../common/formatMessage');
 
 async function get({ account, read, offset, limit, portalAddress }) {
   const criteria = {
@@ -16,7 +16,10 @@ async function get({ account, read, offset, limit, portalAddress }) {
     .skip(offset)
     .limit(limit)
     .lean();
-  const formattedNotifications = notifications.map(formatMessage);
+  const formattedNotifications = notifications.map((elem) => {
+    elem.message = formatMessage({ message, messageVars });
+    return elem;
+  });
   return formattedNotifications;
 }
 

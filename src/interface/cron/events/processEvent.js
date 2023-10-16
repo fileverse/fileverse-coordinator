@@ -34,7 +34,7 @@ async function processAddedCollaboratorEvent({
     forAddress: collaborator,
     audience: "individual",
     message:
-      "${by} invited you to become collaborator of portal ${portalAddress}",
+      "{{by}} invited you to become collaborator of portal {{portalAddress}}",
     messageVars: [
       {
         name: "portalAddress",
@@ -69,7 +69,7 @@ async function processRegisteredCollaboratorKeysEvent({
       portalId: latestPortal.portalId,
       forAddress: address,
       audience: "collaborator_only",
-      message: "${by} joined the portal ${portalAddress}",
+      message: "{{by}} joined the portal {{portalAddress}}",
       messageVars: [
         {
           name: "portalAddress",
@@ -108,7 +108,7 @@ async function processRemovedCollaboratorEvent({
       portalId: latestPortal.portalId,
       forAddress: address,
       audience: "collaborator_only",
-      message: "${account} was removed from portal ${portalAddress} by ${by}",
+      message: "{{account}} was removed from portal {{portalAddress}} by {{by}}",
       messageVars: [
         {
           name: "portalAddress",
