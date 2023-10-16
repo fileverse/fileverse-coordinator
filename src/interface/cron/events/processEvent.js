@@ -116,7 +116,7 @@ async function processRemovedCollaboratorEvent({
           value: by,
         },
       ],
-      type: "collaboratorJoin",
+      type: "collaboratorRemove",
       by,
       blockNumber,
       blockTimestamp,
