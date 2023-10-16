@@ -64,6 +64,7 @@ async function processRemovedCollaboratorEvent(removedCollaborator) {
       uuid: removedCollaborator.id,
       portalAddress: removedCollaborator.portalAddress,
       blockNumber: removedCollaborator.blockNumber,
+      jobName: jobs.REMOVED_COLLABORATOR,
     });
     await event.save();
     // send notification of someone removed a collaborator from portal to portal collaborators

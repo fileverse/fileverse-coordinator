@@ -3,6 +3,7 @@ const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
+const processEvent = require('./processEvent');
 
 const API_URL = config.SUBGRAPH_API;
 const EVENT_NAME = "updatedPortalDatas";
@@ -64,10 +65,12 @@ async function processUpdatedPortalMetadataEvent(updatedPortalMetadata) {
       uuid: updatedPortalMetadata.id,
       portalAddress: updatedPortalMetadata.portalAddress,
       blockNumber: updatedPortalMetadata.blockNumber,
+      jobName: jobs.UPDATED_PORTAL_METADATA,
     });
     await event.save();
-    // update data in portal collection
-    // send notification that portal metadata was updated to collaborators
+    await processEvent(event);
+    event.processed = true;
+    await event.save();
   } catch (err) {
     console.log(err);
   }

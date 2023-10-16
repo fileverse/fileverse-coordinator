@@ -66,6 +66,7 @@ async function processRegisteredCollaboratorKeyEvent(
       data: registeredCollaboratorKey,
       portalAddress: registeredCollaboratorKey.portalAddress,
       blockNumber: registeredCollaboratorKey.blockNumber,
+      jobName: jobs.REGISTERED_COLLABORATOR_KEY,
     });
     await event.save();
     // send notification of someone new just joined portal to the portal collaborators

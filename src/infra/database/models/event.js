@@ -20,6 +20,9 @@ _event.schema = new Schema({
   eventName: {
     type: String,
   },
+  jobName: {
+    type: String,
+  },
   blockNumber: { type: Number, default: 0 },
   processed: { type: Boolean, default: false },
   timeStamp: { type: Date, required: true, default: Date.now },
@@ -39,6 +42,7 @@ _event.schema.methods.safeObject = function () {
     "processed",
     "timeStamp",
     "blockNumber",
+    "jobName",
   ];
   const newSafeObject = {};
   safeFields.forEach((elem) => {

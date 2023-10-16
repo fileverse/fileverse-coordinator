@@ -62,6 +62,7 @@ async function processAddedCollaboratorEvent(addedCollaborator) {
       uuid: addedCollaborator.id,
       portalAddress: addedCollaborator.portalAddress,
       blockNumber: addedCollaborator.blockNumber,
+      jobName: jobs.ADDED_COLLABORATOR,
     });
     await event.save();
     // add collaborator to portal collection 
