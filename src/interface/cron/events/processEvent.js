@@ -39,10 +39,12 @@ async function processAddedCollaboratorEvent({
       {
         name: "portalAddress",
         value: latestPortal.portalAddress,
+        type: 'address'
       },
       {
         name: "by",
         value: by,
+        type: 'address'
       },
     ],
     type: "collaboratorInvite",
@@ -59,7 +61,7 @@ async function processRegisteredCollaboratorKeysEvent({
   blockTimestamp,
 }) {
   const latestPortal = await Portal.getPortal({ portalAddress });
-  latestPortal.collaborators.map(async ({ address }) => {
+  const allPromises = latestPortal.collaborators.map(async ({ address }) => {
     if (by === address) return;
     // create notification for each collaborator
     await createNotification({
@@ -72,10 +74,12 @@ async function processRegisteredCollaboratorKeysEvent({
         {
           name: "portalAddress",
           value: latestPortal.portalAddress,
+          type: 'address'
         },
         {
           name: "by",
           value: by,
+          type: 'address'
         },
       ],
       type: "collaboratorJoin",
@@ -84,6 +88,7 @@ async function processRegisteredCollaboratorKeysEvent({
       blockTimestamp,
     });
   });
+  await Promise.all(allPromises);
 }
 
 async function processRemovedCollaboratorEvent({
@@ -95,7 +100,8 @@ async function processRemovedCollaboratorEvent({
 }) {
   await Portal.removeCollaborator({ portalAddress, collaborator });
   const latestPortal = await Portal.getPortal({ portalAddress });
-  latestPortal.collaborators.map(async ({ address }) => {
+  const allPromises = latestPortal.collaborators.map(async ({ address }) => {
+    if (by === address) return;
     // create notification for each collaborator
     await createNotification({
       portalAddress: latestPortal.portalAddress,
@@ -107,14 +113,17 @@ async function processRemovedCollaboratorEvent({
         {
           name: "portalAddress",
           value: latestPortal.portalAddress,
+          type: 'address'
         },
         {
           name: "account",
           value: collaborator,
+          type: 'address'
         },
         {
           name: "by",
           value: by,
+          type: 'address'
         },
       ],
       type: "collaboratorRemove",
@@ -123,6 +132,7 @@ async function processRemovedCollaboratorEvent({
       blockTimestamp,
     });
   });
+  await Promise.all(allPromises);
 }
 
 async function processEvent(event) {
