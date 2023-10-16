@@ -65,8 +65,9 @@ async function processAddedCollaboratorEvent(addedCollaborator) {
       jobName: jobs.ADDED_COLLABORATOR,
     });
     await event.save();
-    // add collaborator to portal collection 
-    // send individual notification to the collaborator 
+    await processEvent(event);
+    event.processed = true;
+    await event.save();
   } catch (err) {
     console.log(err);
   }

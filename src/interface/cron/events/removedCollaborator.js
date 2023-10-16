@@ -67,7 +67,9 @@ async function processRemovedCollaboratorEvent(removedCollaborator) {
       jobName: jobs.REMOVED_COLLABORATOR,
     });
     await event.save();
-    // send notification of someone removed a collaborator from portal to portal collaborators
+    await processEvent(event);
+    event.processed = true;
+    await event.save();
   } catch (err) {
     console.log(err);
   }

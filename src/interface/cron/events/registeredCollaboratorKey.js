@@ -69,7 +69,9 @@ async function processRegisteredCollaboratorKeyEvent(
       jobName: jobs.REGISTERED_COLLABORATOR_KEY,
     });
     await event.save();
-    // send notification of someone new just joined portal to the portal collaborators
+    await processEvent(event);
+    event.processed = true;
+    await event.save();
   } catch (err) {
     console.log(err);
   }
