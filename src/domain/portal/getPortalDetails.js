@@ -4,8 +4,6 @@ function getPortalDetails(portal) {
 
   return {
     collaborators,
-    members,
-    membersAndCollabs: collaborators.concat(members),
   };
 }
 

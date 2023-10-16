@@ -56,7 +56,7 @@ function getFileEditMessage({ whoEdited, whatSource, whatEdited }) {
   return message;
 }
 
-agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
+agenda.define(jobs.EDITED_FILE, async (job, done) => {
   try {
     const eventName = 'editedFiles';
     const eventProcessed = await EventProcessor.findOne({});
@@ -85,7 +85,7 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
       newEditedFileCheckpt = editedFiles.slice(-1)[0].blockNumber;
     }
 
-    console.log('Recieved entries', jobs.EDITED_FILE_JOB, editedFiles.length);
+    console.log('Recieved entries', jobs.EDITED_FILE, editedFiles.length);
 
     await Promise.all(
       editedFiles.map(async (editFile) => {
@@ -168,9 +168,9 @@ agenda.define(jobs.EDITED_FILE_JOB, async (job, done) => {
     }
     done();
   } catch (err) {
-    console.error('error during job', jobs.EDITED_FILE_JOB, err);
+    console.error('error during job', jobs.EDITED_FILE, err);
     done(err);
   } finally {
-    console.log('Done job', jobs.EDITED_FILE_JOB);
+    console.log('Done job', jobs.EDITED_FILE);
   }
 });

@@ -11,6 +11,11 @@ class PortalContract {
         this.contractInstance = new ethers.Contract(this.contractAddress, this.contractABI, this.networkProvider);
     }
 
+    async getPortalMetadata() {
+        const ipfsHash = await this.contractInstance.metadataIPFSHash();
+        return ipfsHash;
+    }
+
     async getFileCount() {
         const fileCount = await this.contractInstance.getFileCount();
         return fileCount;

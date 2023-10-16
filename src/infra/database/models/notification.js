@@ -4,6 +4,7 @@ const { Schema } = mongoose;
 const _notification = {};
 
 _notification.schema = new Schema({
+  portalId: { type: Schema.Types.ObjectId },
   portalAddress: {
     type: String,
     lowercase: true,
