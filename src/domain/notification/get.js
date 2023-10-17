@@ -27,6 +27,7 @@ async function get({ account, read, offset, limit, portalAddress }) {
     formattedNotification._id = elem._id;
     formattedNotification.type = elem.type;
     formattedNotification.processed = elem.processed;
+    formattedNotification.timeStamp = elem.timeStamp;
     formattedNotification.message = formatMessage({
       message: elem.message,
       messageVars: elem.messageVars,
