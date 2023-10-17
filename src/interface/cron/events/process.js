@@ -24,8 +24,6 @@ async function fetchMinCheckpoint() {
     eventProcessed.addedCollaborator,
     eventProcessed.removedCollaborator,
     eventProcessed.registeredCollaboratorKey,
-    eventProcessed.updatedPortalMetadata,
-    eventProcessed.mint
   );
 }
 
@@ -39,10 +37,10 @@ async function fetchEvents(checkpoint, limit) {
 
 async function processSingleEvent(event) {
   try {
-    const event = await Event.findById(event._id);
     await processEvent(event);
-    event.processed = true;
-    event.save();
+    await Event.findByIdAndUpdate(event._id, {
+      $set: { processed: true },
+    })
   } catch (err) {
     console.log(err);
   }
