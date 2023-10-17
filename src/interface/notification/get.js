@@ -18,7 +18,7 @@ async function get(req, res) {
     isRead = isRead === 'true' ? true : false;
   }
   const notifications = await notification.get({
-    address: req.invokerAddress,
+    account: req.invokerAddress,
     portalAddress: portalAddress,
     offset,
     limit,
