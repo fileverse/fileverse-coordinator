@@ -27,6 +27,6 @@ router.post(
   asyncHandlerArray(process),
 );
 
-router.get('/', asyncHandler(canViewNotification), asyncHandlerArray(get));
+router.get('/', asyncHandlerArray(get));
 
 module.exports = router;
