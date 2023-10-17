@@ -21,7 +21,9 @@ async function get({ account, read, offset, limit, portalAddress }) {
     const formattedNotification = {};
     formattedNotification.portalLogo = elem.portalId && elem.portalId.logo;
     formattedNotification.portalName = elem.portalId && elem.portalId.name;
+    formattedNotification.portalAddress = elem.portalAddress;
     formattedNotification.action = elem.action;
+    formattedNotification.by = elem.by;
     formattedNotification._id = elem._id;
     formattedNotification.type = elem.type;
     formattedNotification.processed = elem.processed;
