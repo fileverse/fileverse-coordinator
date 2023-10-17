@@ -4,7 +4,6 @@ const { Joi, validate } = validator;
 
 const getValidation = {
   query: Joi.object({
-    invokerAddress: Joi.string().required(),
     portalAddress: Joi.string().optional(),
     offset: Joi.number().min(0).optional(),
     limit: Joi.number().min(1).max(50).optional(),
@@ -13,14 +12,13 @@ const getValidation = {
 };
 
 async function get(req, res) {
-  console.log('hello');
-  const { invokerAddress, portalAddress, offset, limit } = req.query;
+  const { portalAddress, offset, limit } = req.query;
   let isRead = req.query.isRead;
   if (isRead) {
     isRead = isRead === 'true' ? true : false;
   }
   const notifications = await notification.get({
-    account: invokerAddress,
+    address: req.invokerAddress,
     portalAddress: portalAddress,
     offset,
     limit,
