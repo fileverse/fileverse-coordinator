@@ -1,9 +1,9 @@
-const { Notification } = require('../../infra/database/models');
-const formatMessage = require('../common/formatMessage');
+const { Notification } = require("../../infra/database/models");
+const formatMessage = require("../common/formatMessage");
 
 async function get({ account, read, offset, limit, portalAddress }) {
   const criteria = {
-    forAddress: account.toLowerCase()
+    forAddress: account.toLowerCase(),
   };
   if (portalAddress) {
     criteria.portalAddress = portalAddress.toLowerCase();
@@ -15,7 +15,7 @@ async function get({ account, read, offset, limit, portalAddress }) {
     .sort({ blockTimestamp: -1 })
     .skip(offset)
     .limit(limit)
-    .populate('portalId')
+    .populate("portalId")
     .lean();
   const formattedNotifications = notifications.map((elem) => {
     const formattedNotification = {};
@@ -25,7 +25,11 @@ async function get({ account, read, offset, limit, portalAddress }) {
     formattedNotification._id = elem._id;
     formattedNotification.type = elem.type;
     formattedNotification.processed = elem.processed;
-    formattedNotification.message = formatMessage({ message: elem.message, messageVars: elem.messageVars });
+    formattedNotification.message = formatMessage({
+      message: elem.message,
+      messageVars: elem.messageVars,
+      portalName: elem.portalId && elem.portalId.name,
+    });
     return formattedNotification;
   });
   return formattedNotifications;
