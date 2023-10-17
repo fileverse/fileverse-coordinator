@@ -9,25 +9,24 @@ async function graceful() {
 
 (async function () {
   try {
-    let crons = [];
-
     await agenda.start();
+    // require('./interface/cron/events/addedFiles');
+    // require('./interface/cron/events/editedFiles');
+    require('./interface/cron/events/addedCollaborator');
+    require('./interface/cron/events/registeredCollaboratorKey');
+    require('./interface/cron/events/removedCollaborator');
+    require('./interface/cron/events/updatedPortalMetadata');
+    require('./interface/cron/events/mint');
+    require('./interface/cron/events/process');
 
-    require('./interface/cron/events/addedCollaborators');
-    require('./interface/cron/events/addedFiles');
-    // require('./interface/cron/events/addedMembers');
-    require('./interface/cron/events/editedFiles');
-    require('./interface/cron/events/invitedCollaborators');
-    // require('./interface/cron/events/removedMembers');
-    require('./interface/cron/events/removedCollaborators');
-    require('./interface/cron/events/editPortalData');
-
-    await agenda.every('20 seconds', jobs.INVITED_COLLABORATOR_JOB);
-    await agenda.every('20 seconds', jobs.ADDED_COLLABORATOR_JOB);
-    await agenda.every('20 seconds', jobs.ADDED_FILE_JOB);
-    await agenda.every('20 seconds', jobs.EDITED_FILE_JOB);
-    await agenda.every('20 seconds', jobs.REMOVED_COLLABORATOR_JOB);
-    await agenda.every('20 seconds', jobs.EDITED_PORTAL_DATA);
+    // await agenda.every('20 seconds', jobs.ADDED_FILE);
+    // await agenda.every('20 seconds', jobs.EDITED_FILE);
+    await agenda.every('20 seconds', jobs.ADDED_COLLABORATOR);
+    await agenda.every('20 seconds', jobs.REGISTERED_COLLABORATOR_KEY);
+    await agenda.every('20 seconds', jobs.REMOVED_COLLABORATOR);
+    await agenda.every('20 seconds', jobs.UPDATED_PORTAL_METADATA);
+    await agenda.every('20 seconds', jobs.MINT);
+    await agenda.every('10 seconds', jobs.PROCESS);
   } catch (err) {
     console.log(err.stack);
     await graceful();

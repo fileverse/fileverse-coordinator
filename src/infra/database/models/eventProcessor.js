@@ -4,11 +4,11 @@ const { Schema } = mongoose;
 const _eventProcessor = {};
 
 _eventProcessor.schema = new Schema({
-  addMember: {
+  addedFile: {
     type: Number,
     default: 0,
   },
-  removeMember: {
+  editedFile: {
     type: Number,
     default: 0,
   },
@@ -16,23 +16,19 @@ _eventProcessor.schema = new Schema({
     type: Number,
     default: 0,
   },
-  removeCollaborator: {
+  removedCollaborator: {
     type: Number,
     default: 0,
   },
-  invitedCollaborator: {
+  registeredCollaboratorKey: {
     type: Number,
     default: 0,
   },
-  addFile: {
+  updatedPortalMetadata: {
     type: Number,
     default: 0,
   },
-  editFile: {
-    type: Number,
-    default: 0,
-  },
-  editPortal: {
+  mint: {
     type: Number,
     default: 0,
   },
@@ -45,7 +41,7 @@ _eventProcessor.schema.pre('save', function (next) {
 });
 
 _eventProcessor.model = mongoose.model(
-  'eventProcessors',
+  'event_processors',
   _eventProcessor.schema,
 );
 

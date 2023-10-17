@@ -4,7 +4,6 @@ const { Joi, validate } = validator;
 
 const getValidation = {
   query: Joi.object({
-    invokerAddress: Joi.string().required(),
     portalAddress: Joi.string().optional(),
     offset: Joi.number().min(0).optional(),
     limit: Joi.number().min(1).max(50).optional(),

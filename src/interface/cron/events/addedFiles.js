@@ -73,7 +73,7 @@ function getFileAddMessage({
   return message;
 }
 
-agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
+agenda.define(jobs.ADDED_FILE, async (job, done) => {
   try {
     const eventName = 'addedFiles';
     const eventProcessed = await EventProcessor.findOne({});
@@ -103,7 +103,7 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
       newAddedFileCheckpt = addedFiles.slice(-1)[0].blockNumber;
     }
 
-    console.log('Recieved entries', jobs.ADDED_FILE_JOB, addedFiles.length);
+    console.log('Recieved entries', jobs.ADDED_FILE, addedFiles.length);
 
     await Promise.all(
       addedFiles.map(async (addFile) => {
@@ -172,9 +172,9 @@ agenda.define(jobs.ADDED_FILE_JOB, async (job, done) => {
     }
     done();
   } catch (err) {
-    console.error('error during job', jobs.ADDED_FILE_JOB, err);
+    console.error('error during job', jobs.ADDED_FILE, err);
     done(err);
   } finally {
-    console.log('Done job', jobs.ADDED_FILE_JOB);
+    console.log('Done job', jobs.ADDED_FILE);
   }
 });

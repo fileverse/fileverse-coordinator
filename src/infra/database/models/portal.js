@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 const _portal = {};
@@ -23,18 +23,26 @@ _portal.schema = new Schema({
     trim: true,
     lowercase: true,
   },
-  portalMetadataIPFSHash: {
+  name: { type: String, trim: true },
+  logo: { type: String, trim: true },
+  cover: { type: String, trim: true },
+  ipfsHash: {
     type: String,
     trim: true,
   },
-  name: { type: String },
-  logo: { type: String },
-  members: [_accountSchema],
   collaborators: [_accountSchema],
 });
 
 _portal.schema.methods.safeObject = function () {
-  const safeFields = ['_id', 'portalAddress', 'collaborators', 'members'];
+  const safeFields = [
+    "_id",
+    "portalAddress",
+    "ipfsHash",
+    "name",
+    "logo",
+    "cover",
+    "collaborators",
+  ];
   const newSafeObject = {};
   safeFields.forEach((elem) => {
     // eslint-disable-next-line security/detect-object-injection
@@ -43,6 +51,6 @@ _portal.schema.methods.safeObject = function () {
   return newSafeObject;
 };
 
-_portal.model = mongoose.model('portals', _portal.schema);
+_portal.model = mongoose.model("portals", _portal.schema);
 
 module.exports = _portal;
