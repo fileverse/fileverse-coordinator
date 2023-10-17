@@ -3,7 +3,9 @@ const Portal = require("../../../domain/portal");
 const createNotification = require("./createNotification");
 
 async function processMintEvent({ portalAddress, by }) {
-  await Portal.getPortal({ portalAddress });
+  console.log(portalAddress);
+  const portal = await Portal.getPortal({ portalAddress });
+  console.log(portal);
 }
 
 async function processUpdatedPortalMetadataEvent({
@@ -136,7 +138,7 @@ async function processRemovedCollaboratorEvent({
 }
 
 async function processEvent(event) {
-  if (event.eventName === "mint") {
+  if (event.eventName === "mints") {
     await processMintEvent({
       portalAddress: event.portalAddress,
       by: event.data.account,

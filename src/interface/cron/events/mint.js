@@ -6,7 +6,7 @@ const jobs = require("../jobs");
 const axios = require("axios");
 
 const API_URL = config.SUBGRAPH_API;
-const EVENT_NAME = "mint";
+const EVENT_NAME = "mints";
 
 agenda.define(jobs.MINT, async (job, done) => {
   try {
@@ -55,7 +55,7 @@ async function processMintEvent(mint) {
       eventName: EVENT_NAME,
       uuid: mint.id,
       data: mint,
-      portalAddress: mint.portalAddress,
+      portalAddress: mint.portal,
       blockNumber: mint.blockNumber,
     });
     await event.save();

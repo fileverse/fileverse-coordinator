@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 const _event = {};
 
 _event.schema = new Schema({
-  id: {
+  uuid: {
     type: String,
     unique: true
   },
