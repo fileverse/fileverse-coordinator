@@ -1,11 +1,11 @@
 const config = require("../../../../config");
-const { EventProcessor } = require("../../../infra/database/models");
+const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
 
 const API_URL = config.SUBGRAPH_API;
-const EVENT_NAME = "registeredCollaboratorKey";
+const EVENT_NAME = "registeredCollaboratorKeys";
 
 agenda.define(jobs.REGISTERED_COLLABORATOR_KEY, async (job, done) => {
   try {
@@ -54,6 +54,7 @@ async function fetchRegisteredCollaboratorKeyEvents(checkpoint) {
         }
       }`,
   });
+  console.log(response?.data);
   return response?.data?.data[EVENT_NAME] || [];
 }
 
@@ -69,9 +70,6 @@ async function processRegisteredCollaboratorKeyEvent(
       blockNumber: registeredCollaboratorKey.blockNumber,
       jobName: jobs.REGISTERED_COLLABORATOR_KEY,
     });
-    await event.save();
-    await processEvent(event);
-    event.processed = true;
     await event.save();
   } catch (err) {
     console.log(err);

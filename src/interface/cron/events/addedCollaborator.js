@@ -3,7 +3,6 @@ const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
-const processEvent = require("./processEvent");
 
 const API_URL = config.SUBGRAPH_API;
 const EVENT_NAME = "addedCollaborators";
@@ -66,9 +65,6 @@ async function processAddedCollaboratorEvent(addedCollaborator) {
       blockNumber: addedCollaborator.blockNumber,
       jobName: jobs.ADDED_COLLABORATOR,
     });
-    await event.save();
-    await processEvent(event);
-    event.processed = true;
     await event.save();
   } catch (err) {
     console.log(err);

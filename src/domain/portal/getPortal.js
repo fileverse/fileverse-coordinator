@@ -28,6 +28,12 @@ async function getPortal({ portalAddress }) {
     });
     await portal.save();
   }
+  // remove deleted collaborators
+  portal.collaborators = portal.collaborators.filter(elem => {
+    const addedAt = elem && elem.addedBlockNumber || 0;
+    const removedAt = elem && elem.removedBlockNumber || 0;
+    return addedAt > removedAt;
+  });
   return portal;
 }
 

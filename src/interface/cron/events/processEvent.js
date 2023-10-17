@@ -32,9 +32,9 @@ async function processAddedCollaboratorEvent({
   const latestPortal = await Portal.getPortal({ portalAddress });
   await createNotification({
     portalAddress: latestPortal.portalAddress,
-    portalId: latestPortal.portalId,
+    portalId: latestPortal._id,
     forAddress: collaborator,
-    audience: "individual",
+    audience: "individuals",
     message:
       "{{by}} invited you to become collaborator of portal {{portalAddress}}",
     messageVars: [
@@ -68,9 +68,9 @@ async function processRegisteredCollaboratorKeysEvent({
     // create notification for each collaborator
     await createNotification({
       portalAddress: latestPortal.portalAddress,
-      portalId: latestPortal.portalId,
+      portalId: latestPortal._id,
       forAddress: address,
-      audience: "collaborator_only",
+      audience: "collaborators_only",
       message: "{{by}} joined the portal {{portalAddress}}",
       messageVars: [
         {
@@ -102,14 +102,43 @@ async function processRemovedCollaboratorEvent({
 }) {
   await Portal.removeCollaborator({ portalAddress, collaborator });
   const latestPortal = await Portal.getPortal({ portalAddress });
+  await createNotification({
+    portalAddress: latestPortal.portalAddress,
+    portalId: latestPortal._id,
+    forAddress: collaborator,
+    audience: "individuals",
+    message:
+      "{{account}} was removed from portal {{portalAddress}} by {{by}}",
+    messageVars: [
+      {
+        name: "portalAddress",
+        value: latestPortal.portalAddress,
+        type: 'address'
+      },
+      {
+        name: "account",
+        value: collaborator,
+        type: 'address'
+      },
+      {
+        name: "by",
+        value: by,
+        type: 'address'
+      },
+    ],
+    type: "collaboratorRemove",
+    by,
+    blockNumber,
+    blockTimestamp,
+  });
   const allPromises = latestPortal.collaborators.map(async ({ address }) => {
     if (by === address) return;
     // create notification for each collaborator
     await createNotification({
       portalAddress: latestPortal.portalAddress,
-      portalId: latestPortal.portalId,
+      portalId: latestPortal._id,
       forAddress: address,
-      audience: "collaborator_only",
+      audience: "collaborators_only",
       message: "{{account}} was removed from portal {{portalAddress}} by {{by}}",
       messageVars: [
         {
@@ -164,7 +193,7 @@ async function processEvent(event) {
       blockTimestamp: event.blockTimestamp,
     });
   }
-  if (event.eventName === "registeredCollaboratorKey") {
+  if (event.eventName === "registeredCollaboratorKeys") {
     // send notification of someone new just joined portal to the portal collaborators
     await processRegisteredCollaboratorKeysEvent({
       portalAddress: event.portalAddress,

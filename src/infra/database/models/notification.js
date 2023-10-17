@@ -6,6 +6,7 @@ const _notification = {};
 const MessageVars = new Schema({
   name: { type: String },
   value: { type: String },
+  type: { type: String },
 });
 
 _notification.schema = new Schema({

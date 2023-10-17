@@ -1,7 +1,6 @@
 const config = require("../../../../config");
 const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
-const processEvent = require('./processEvent');
 const jobs = require("../jobs");
 const axios = require("axios");
 
@@ -58,9 +57,6 @@ async function processMintEvent(mint) {
       portalAddress: mint.portal,
       blockNumber: mint.blockNumber,
     });
-    await event.save();
-    await processEvent(event);
-    event.processed = true;
     await event.save();
   } catch (err) {
     console.log(err);

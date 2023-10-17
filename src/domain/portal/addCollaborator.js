@@ -3,12 +3,21 @@ const { Portal } = require("../../infra/database/models");
 
 async function addCollaborator({ portalAddress, collaborator, blockNumber }) {
   const foundPortal = await getPortal({ portalAddress });
+  const collaboratorList = foundPortal.collaborators;
+  const finalList = collaboratorList.filter(elem => elem.address === collaborator);
+  const foundCollaborator = collaboratorList.find((elem) => elem.address === collaborator);
+  if (!foundCollaborator) {
+    finalList.push({ address: collaborator, addedBlocknumber: blockNumber });
+  } else {
+    finalList.push({
+      address: collaborator,
+      removedBlocknumber: foundCollaborator.removedBlocknumber,
+      addedBlocknumber: blockNumber,
+    });
+  }
   await Portal.findByIdAndUpdate(foundPortal._id, {
-    $push: {
-      collaborators: {
-        address: collaborator,
-        addedBlocknumber: blockNumber,
-      }
+    $set: {
+      collaborators: finalList,
     }
   });
   return true;
