@@ -64,6 +64,7 @@ async function processAddedCollaboratorEvent(addedCollaborator) {
       portalAddress: addedCollaborator.portalAddress,
       blockNumber: addedCollaborator.blockNumber,
       jobName: jobs.ADDED_COLLABORATOR,
+      blockTimestamp: addedCollaborator.blockTimestamp,
     });
     await event.save();
   } catch (err) {

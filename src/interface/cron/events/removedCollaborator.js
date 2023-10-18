@@ -66,6 +66,7 @@ async function processRemovedCollaboratorEvent(removedCollaborator) {
       portalAddress: removedCollaborator.portalAddress,
       blockNumber: removedCollaborator.blockNumber,
       jobName: jobs.REMOVED_COLLABORATOR,
+      blockTimestamp: removedCollaborator.blockTimestamp,
     });
     await event.save();
   } catch (err) {

@@ -68,6 +68,7 @@ async function processRegisteredCollaboratorKeyEvent(
       data: registeredCollaboratorKey,
       portalAddress: registeredCollaboratorKey.portalAddress,
       blockNumber: registeredCollaboratorKey.blockNumber,
+      blockTimestamp: registeredCollaboratorKey.blockTimestamp,
       jobName: jobs.REGISTERED_COLLABORATOR_KEY,
     });
     await event.save();
