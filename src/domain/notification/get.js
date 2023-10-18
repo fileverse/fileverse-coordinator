@@ -12,7 +12,7 @@ async function get({ account, read, offset, limit, portalAddress }) {
     criteria.processed = read;
   }
   const notifications = await Notification.find(criteria)
-    .sort({ blockTimestamp: -1 })
+    .sort({ blockTimestamp: -1, _id: -1 })
     .skip(offset)
     .limit(limit)
     .populate("portalId")
