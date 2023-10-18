@@ -63,6 +63,12 @@ async function processRegisteredCollaboratorKeysEvent({
   blockTimestamp,
 }) {
   const latestPortal = await Portal.getPortal({ portalAddress });
+  // disable invite notification action
+  await completeNotificationAction({
+    portalAddress: latestPortal.portalAddress,
+    forAddress: address,
+    type: 'collaboratorInvite'
+  });
   const allPromises = latestPortal.collaborators.map(async ({ address }) => {
     if (by === address) return;
     // create notification for each collaborator

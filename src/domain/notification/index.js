@@ -3,4 +3,5 @@ module.exports = {
   create: require('./create'),
   process: require('./process'),
   unread: require('./unread'),
+  markComplete: require('./markComplete'),
 };
