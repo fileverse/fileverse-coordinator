@@ -107,6 +107,12 @@ async function processRemovedCollaboratorEvent({
   blockTimestamp,
 }) {
   await Portal.removeCollaborator({ portalAddress, collaborator });
+  // disable invite notification action
+  await completeNotificationAction({
+    portalAddress: latestPortal.portalAddress,
+    forAddress: address,
+    type: 'collaboratorInvite'
+  });
   const latestPortal = await Portal.getPortal({ portalAddress });
   await createNotification({
     portalAddress: latestPortal.portalAddress,
@@ -172,6 +178,32 @@ async function processRemovedCollaboratorEvent({
   await Promise.all(allPromises);
 }
 
+async function processAddedFileEvent({
+  portalAddress,
+  fileMetdataIPFSHash,
+  fileId,
+  fileType,
+  by,
+  blockNumber,
+  blockTimestamp,
+}) {
+  const latestPortal = await Portal.getPortal({ portalAddress });
+  console.log(latestPortal);
+}
+
+async function processAddedFileEvent({
+  portalAddress,
+  fileMetdataIPFSHash,
+  fileId,
+  fileType,
+  by,
+  blockNumber,
+  blockTimestamp,
+}) {
+  const latestPortal = await Portal.getPortal({ portalAddress });
+  console.log(latestPortal);
+}
+
 async function processEvent(event) {
   if (event.eventName === "mints") {
     await processMintEvent({
@@ -213,6 +245,30 @@ async function processEvent(event) {
     await processRemovedCollaboratorEvent({
       portalAddress: event.portalAddress,
       collaborator: event.data.account,
+      by: event.data.by,
+      blockNumber: event.blockNumber,
+      blockTimestamp: event.blockTimestamp,
+    });
+  }
+  if (event.eventName === "addedFiles") {
+    // send notification of someone removed a collaborator from portal to portal collaborators
+    await processAddedFileEvent({
+      portalAddress: event.portalAddress,
+      fileMetdataIPFSHash: event.data.metadataIPFSHash,
+      fileId: event.data.fileId,
+      fileType: event.data.fileType,
+      by: event.data.by,
+      blockNumber: event.blockNumber,
+      blockTimestamp: event.blockTimestamp,
+    });
+  }
+  if (event.eventName === "editedFiles") {
+    // send notification of someone removed a collaborator from portal to portal collaborators
+    await processEditedEvent({
+      portalAddress: event.portalAddress,
+      fileMetdataIPFSHash: event.data.metadataIPFSHash,
+      fileId: event.data.fileId,
+      fileType: event.data.fileType,
       by: event.data.by,
       blockNumber: event.blockNumber,
       blockTimestamp: event.blockTimestamp,
