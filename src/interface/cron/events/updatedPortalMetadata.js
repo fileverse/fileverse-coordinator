@@ -6,14 +6,19 @@ const axios = require("axios");
 const processEvent = require('./processEvent');
 
 const API_URL = config.SUBGRAPH_API;
+const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
 const EVENT_NAME = "updatedPortalDatas";
+const BATCH_SIZE = 10;
 
 agenda.define(jobs.UPDATED_PORTAL_METADATA, async (job, done) => {
   try {
+    const latestBlockNumber = await getLatestBlockNumberFromSubgraph();
     const updatedPortalMetadataCheckpoint =
       await fetchUpdatedPortalMetadataCheckpoint();
+    const batchSize = BATCH_SIZE;
     const updatedPortalMetadatas = await fetchUpdatedPortalMetadataEvents(
-      updatedPortalMetadataCheckpoint
+      updatedPortalMetadataCheckpoint,
+      batchSize,
     );
     console.log(
       "Received entries",
@@ -22,7 +27,7 @@ agenda.define(jobs.UPDATED_PORTAL_METADATA, async (job, done) => {
     );
     await processUpdatedPortalMetadataEvents(updatedPortalMetadatas);
     const lastUpdatedPortalMetadataCheckpoint =
-      getLastUpdatedPortalMetadataCheckpoint(updatedPortalMetadatas);
+      getLastUpdatedPortalMetadataCheckpoint({ updatedPortalMetadatas, batchSize, latestBlockNumber });
     if (lastUpdatedPortalMetadataCheckpoint) {
       await updateUpdatedPortalMetadataCheckpoint(
         lastUpdatedPortalMetadataCheckpoint
@@ -37,15 +42,23 @@ agenda.define(jobs.UPDATED_PORTAL_METADATA, async (job, done) => {
   }
 });
 
+async function getLatestBlockNumberFromSubgraph() {
+  const response = await axios.get(STATUS_API_URL);
+  const statusObject = response?.data?.data['indexingStatusForCurrentVersion'] || {};
+  const chains = statusObject.chains || [];
+  const firstObject = chains.pop();
+  return parseInt(firstObject?.latestBlock?.number, 10) || 0;
+}
+
 async function fetchUpdatedPortalMetadataCheckpoint() {
   const eventProcessed = await EventProcessor.findOne({});
   return eventProcessed ? eventProcessed.updatedPortalMetadata : 0;
 }
 
-async function fetchUpdatedPortalMetadataEvents(checkpoint) {
+async function fetchUpdatedPortalMetadataEvents(checkpoint, itemCount) {
   const response = await axios.post(API_URL, {
     query: `{
-      ${EVENT_NAME}(first: 5, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {
+      ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {
           id
           portalAddress,
           blockNumber,
@@ -86,12 +99,16 @@ async function processUpdatedPortalMetadataEvents(updatedPortalMetadatas) {
   return data;
 }
 
-function getLastUpdatedPortalMetadataCheckpoint(updatedPortalMetadatas) {
+function getLastUpdatedPortalMetadataCheckpoint({ updatedPortalMetadatas, batchSize, latestBlockNumber }) {
+  if (updatedPortalMetadatas.length < batchSize) {
+    return latestBlockNumber;
+  }
   const lastElem = (updatedPortalMetadatas || []).pop();
   return lastElem ? lastElem.blockNumber : null;
 }
 
 function updateUpdatedPortalMetadataCheckpoint(newCheckpoint) {
+  if (!newCheckpoint || newCheckpoint < 0) return;
   return EventProcessor.updateOne(
     {},
     {
