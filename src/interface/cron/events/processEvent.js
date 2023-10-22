@@ -294,7 +294,7 @@ async function processAddedFileEvent({
   }
 }
 
-async function processAddedFileEvent({
+async function processEditedFileEvent({
   portalAddress,
   fileMetdataIPFSHash,
   fileId,
@@ -308,7 +308,7 @@ async function processAddedFileEvent({
   const fileDataType = await extractFileDataType(fileMetadata);
   const fileTypeText = await getFileTypeText(fileType);
   const fileDataTypeText = await getFileDataTypeText(fileDataType);
-  const notificationType = await getNotificationTypeFromFileDataType(fileDataType, true);
+  const notificationType = await getNotificationTypeFromFileDataType(fileDataType, false);
   const latestPortal = await Portal.getPortal({ portalAddress });
   if (fileType === 1 || fileType === 0) {
     const allPromises = latestPortal.collaborators.map(async ({ address }) => {
@@ -422,7 +422,7 @@ async function processEvent(event) {
   }
   if (event.eventName === "editedFiles") {
     // send notification of someone removed a collaborator from portal to portal collaborators
-    await processEditedEvent({
+    await processEditedFileEvent({
       portalAddress: event.portalAddress,
       fileMetdataIPFSHash: event.data.metadataIPFSHash,
       fileId: event.data.fileId,
