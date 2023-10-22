@@ -226,6 +226,10 @@ async function getFileDataTypeText(fileDataType) {
   return '';
 }
 
+async function extractFileDataType(metadata) {
+  return metadata?.source;
+}
+
 async function processAddedFileEvent({
   portalAddress,
   fileMetdataIPFSHash,
