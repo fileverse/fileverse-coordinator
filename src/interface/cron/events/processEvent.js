@@ -178,17 +178,52 @@ async function processRemovedCollaboratorEvent({
   await Promise.all(allPromises);
 }
 
-async function processAddedFileEvent({
-  portalAddress,
-  fileMetdataIPFSHash,
-  fileId,
-  fileType,
-  by,
-  blockNumber,
-  blockTimestamp,
-}) {
-  const latestPortal = await Portal.getPortal({ portalAddress });
-  console.log(latestPortal);
+async function getNotificationTypeFromFileDataType(fileDataType, created = false) {
+  if (fileDataType === 'dPage') {
+    return created ? 'dPagePublish': 'dPageEdit';
+  }
+  if (fileDataType === 'whiteboard') {
+    return created ? 'whiteboardPublish': 'whiteboardEdit';
+  }
+  if (fileDataType === 'dDoc') {
+    return created ? 'dDocPublish': 'dDocEdit';
+  }
+  if (fileDataType === 'file') {
+    return created ? 'addFile': 'editFile';
+  }
+  return '';
+}
+
+async function getFileTypeText(fileType) {
+  if (fileType === '0' || fileType === 0) {
+    return 'public';
+  }
+  if (fileType === '1' || fileType === 1) {
+    return 'private';
+  }
+  if (fileType === '2' || fileType === 2) {
+    return 'gated';
+  }
+  if (fileType === '3' || fileType === 3) {
+    return 'members only';
+  }
+  return '';
+}
+
+async function getFileDataTypeText(fileDataType) {
+  if (fileDataType === 'dPage') {
+    return 'DPage';
+  }
+  if (fileDataType === 'whiteboard') {
+    return 'whiteboard';
+  }
+  if (fileDataType === 'dDoc') {
+    return 'DDoc';
+  }
+  if (fileDataType === 'file') {
+    return 'file';
+  }
+  return '';
 }
 
 async function processAddedFileEvent({
@@ -200,8 +235,131 @@ async function processAddedFileEvent({
   blockNumber,
   blockTimestamp,
 }) {
+  fileType = parseInt(fileType, 10);
+  const fileMetadata = await Common.resolveIPFSHash(fileMetdataIPFSHash);
+  const fileDataType = await extractFileDataType(fileMetadata);
+  const fileTypeText = await getFileTypeText(fileType);
+  const fileDataTypeText = await getFileDataTypeText(fileDataType);
+  const notificationType = await getNotificationTypeFromFileDataType(fileDataType, true);
   const latestPortal = await Portal.getPortal({ portalAddress });
-  console.log(latestPortal);
+  if (fileType === 1 || fileType === 0) {
+    const allPromises = latestPortal.collaborators.map(async ({ address }) => {
+      if (by === address) return;
+      // create notification for each collaborator
+      await createNotification({
+        portalAddress: latestPortal.portalAddress,
+        portalId: latestPortal._id,
+        forAddress: address,
+        audience: "collaborators_only",
+        message: `{{by}} uploaded a {{fileTypeText}} {{fileDataTypeText}} "{{fileName}}" to portal "{{portalAddress}}"`,
+        messageVars: [
+          {
+            name: "portalAddress",
+            value: latestPortal.portalAddress,
+            type: 'address'
+          },
+          {
+            name: "fileId",
+            value: fileId,
+            type: 'number'
+          },
+          {
+            name: "fileName",
+            value: fileMetadata.name,
+            type: 'number'
+          },
+          {
+            name: "fileType",
+            value: fileTypeText,
+            type: 'string'
+          },
+          {
+            name: "fileDataType",
+            value: fileDataTypeText,
+            type: 'string'
+          },
+          {
+            name: "by",
+            value: by,
+            type: 'address'
+          },
+        ],
+        type: notificationType,
+        by,
+        blockNumber,
+        blockTimestamp,
+      });
+    });
+    await Promise.all(allPromises);
+  }
+}
+
+async function processAddedFileEvent({
+  portalAddress,
+  fileMetdataIPFSHash,
+  fileId,
+  fileType,
+  by,
+  blockNumber,
+  blockTimestamp,
+}) {
+  fileType = parseInt(fileType, 10);
+  const fileMetadata = await Common.resolveIPFSHash(fileMetdataIPFSHash);
+  const fileDataType = await extractFileDataType(fileMetadata);
+  const fileTypeText = await getFileTypeText(fileType);
+  const fileDataTypeText = await getFileDataTypeText(fileDataType);
+  const notificationType = await getNotificationTypeFromFileDataType(fileDataType, true);
+  const latestPortal = await Portal.getPortal({ portalAddress });
+  if (fileType === 1 || fileType === 0) {
+    const allPromises = latestPortal.collaborators.map(async ({ address }) => {
+      if (by === address) return;
+      // create notification for each collaborator
+      await createNotification({
+        portalAddress: latestPortal.portalAddress,
+        portalId: latestPortal._id,
+        forAddress: address,
+        audience: "collaborators_only",
+        message: `{{by}} edited a {{fileTypeText}} {{fileDataTypeText}} "{{fileName}}" on portal "{{portalAddress}}"`,
+        messageVars: [
+          {
+            name: "portalAddress",
+            value: latestPortal.portalAddress,
+            type: 'address'
+          },
+          {
+            name: "fileId",
+            value: fileId,
+            type: 'number'
+          },
+          {
+            name: "fileName",
+            value: fileMetadata.name,
+            type: 'number'
+          },
+          {
+            name: "fileType",
+            value: fileTypeText,
+            type: 'string'
+          },
+          {
+            name: "fileDataType",
+            value: fileDataTypeText,
+            type: 'string'
+          },
+          {
+            name: "by",
+            value: by,
+            type: 'address'
+          },
+        ],
+        type: notificationType,
+        by,
+        blockNumber,
+        blockTimestamp,
+      });
+    });
+    await Promise.all(allPromises);
+  }
 }
 
 async function processEvent(event) {
