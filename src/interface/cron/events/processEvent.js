@@ -4,9 +4,7 @@ const createNotification = require("./createNotification");
 const completeNotificationAction = require("./completeNotificationAction");
 
 async function processMintEvent({ portalAddress, by }) {
-  console.log(portalAddress);
-  const portal = await Portal.getPortal({ portalAddress });
-  console.log(portal);
+  await Portal.getPortal({ portalAddress });
 }
 
 async function processUpdatedPortalMetadataEvent({
@@ -16,8 +14,7 @@ async function processUpdatedPortalMetadataEvent({
 }) {
   const metadata = await Common.resolveIPFSHash(ipfsHash);
   await Portal.updatePortal({ portalAddress, ipfsHash, metadata });
-  const latestPortal = await Portal.getPortal({ portalAddress });
-  console.log(latestPortal, by);
+  await Portal.getPortal({ portalAddress });
 }
 
 async function processAddedCollaboratorEvent({
