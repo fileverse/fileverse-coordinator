@@ -5,14 +5,19 @@ const jobs = require("../jobs");
 const axios = require("axios");
 
 const API_URL = config.SUBGRAPH_API;
+const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
 const EVENT_NAME = "removedCollaborators";
+const BATCH_SIZE = 10;
 
 agenda.define(jobs.REMOVED_COLLABORATOR, async (job, done) => {
   try {
+    const latestBlockNumber = await getLatestBlockNumberFromSubgraph();
     const removedCollaboratorCheckpoint =
       await fetchRemovedCollaboratorCheckpoint();
+    const batchSize = BATCH_SIZE;
     const removedCollaborators = await fetchRemovedCollaboratorEvents(
-      removedCollaboratorCheckpoint
+      removedCollaboratorCheckpoint,
+      batchSize,
     );
     console.log(
       "Received entries",
@@ -21,7 +26,7 @@ agenda.define(jobs.REMOVED_COLLABORATOR, async (job, done) => {
     );
     await processRemovedCollaboratorEvents(removedCollaborators);
     const lastRemovedCollaboratorCheckpoint =
-      getLastRemovedCollaboratorCheckpoint(removedCollaborators);
+      getLastRemovedCollaboratorCheckpoint({ removedCollaborators, batchSize, latestBlockNumber });
     if (lastRemovedCollaboratorCheckpoint) {
       await updateRemovedCollaboratorCheckpoint(
         lastRemovedCollaboratorCheckpoint
@@ -36,15 +41,23 @@ agenda.define(jobs.REMOVED_COLLABORATOR, async (job, done) => {
   }
 });
 
+async function getLatestBlockNumberFromSubgraph() {
+  const response = await axios.get(STATUS_API_URL);
+  const statusObject = response?.data?.data['indexingStatusForCurrentVersion'] || {};
+  const chains = statusObject.chains || [];
+  const firstObject = chains.pop();
+  return parseInt(firstObject?.latestBlock?.number, 10) || 0;
+}
+
 async function fetchRemovedCollaboratorCheckpoint() {
   const eventProcessed = await EventProcessor.findOne({});
   return eventProcessed ? eventProcessed.removedCollaborator : 0;
 }
 
-async function fetchRemovedCollaboratorEvents(checkpoint) {
+async function fetchRemovedCollaboratorEvents(checkpoint, itemCount) {
   const response = await axios.post(API_URL, {
     query: `{
-      ${EVENT_NAME}(first: 5, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {
+      ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {
           id
           portalAddress,
           by,
@@ -82,12 +95,16 @@ async function processRemovedCollaboratorEvents(removedCollaborators) {
   return data;
 }
 
-function getLastRemovedCollaboratorCheckpoint(removedCollaborators) {
+function getLastRemovedCollaboratorCheckpoint({ removedCollaborators, batchSize, latestBlockNumber }) {
+  if (removedCollaborators.length < batchSize) {
+    return latestBlockNumber;
+  }
   const lastElem = (removedCollaborators || []).pop();
   return lastElem ? lastElem.blockNumber : null;
 }
 
 function updateRemovedCollaboratorCheckpoint(newCheckpoint) {
+  if (!newCheckpoint || newCheckpoint < 0) return;
   return EventProcessor.updateOne(
     {},
     {

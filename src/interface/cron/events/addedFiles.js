@@ -1,180 +1,126 @@
-const jobs = require('../jobs');
-const agenda = require('./../index');
-const axios = require('axios');
-const config = require('./../../../../config');
-const {
-  EventProcessor,
-  Portal,
-  Notification,
-} = require('../../../infra/database/models');
-const getFileDetails = require('../../../domain/notification/file/getFileDetails');
-const getPortalMetadata = require('../../../domain/portal/getPortalMetadata');
-const formatAddress = require('../../../domain/portal/formatAddress');
+const config = require("../../../../config");
+const { EventProcessor, Event } = require("../../../infra/database/models");
+const agenda = require("../index");
+const jobs = require("../jobs");
+const axios = require("axios");
 
-const apiURL = config.SUBGRAPH_API;
+const API_URL = config.SUBGRAPH_API;
+const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
 
-async function notificationAlreadyPresent(addedFile) {
-  const foundNotif = await Notification.findOne({
-    portalAddress: addedFile.portalAddress,
-    blockNumber: addedFile.blockNumber,
-    'content.metadataIPFSHash': addedFile.metadataIPFSHash,
-  });
-  if (foundNotif) {
-    return true;
-  }
-  return false;
-}
-
-function getNotificationType(whatSource) {
-  switch (whatSource) {
-    case 'dPage':
-      return 'dPagePublish';
-    case 'dDoc':
-      return 'dDocPublish';
-    case 'file':
-      return 'addFile';
-    case 'whiteboard':
-      return 'whiteboardPublish';
-  }
-}
-
-function getFileAddMessage({
-  whoAdded,
-  whatTypeAdded,
-  whatSource,
-  whatAdded,
-  onWhatPortal,
-}) {
-  let message = '';
-  if (whatSource === 'dPage') {
-    message = `${whoAdded} published a ${whatTypeAdded} dPage to "${onWhatPortal}"`;
-    if (!whatAdded) {
-      message += ` named "${whatAdded}"`;
-    }
-  } else if (whatSource === 'whiteboard') {
-    if (whatAdded) {
-      message = `${whoAdded} uploaded a ${whatTypeAdded} whiteboard "${whatAdded}" to "${onWhatPortal}"`;
-    } else {
-      message = `${whoAdded} uploaded a ${whatTypeAdded} whiteboard to "${onWhatPortal}"`;
-    }
-  } else if (whatSource === 'dDoc') {
-    if (whatAdded) {
-      message = `${whoAdded} uploaded a ${whatTypeAdded} dDoc "${whatAdded}" to "${onWhatPortal}"`;
-    } else {
-      message = `${whoAdded} uploaded a ${whatTypeAdded} dDoc to "${onWhatPortal}"`;
-    }
-  } else {
-    if (whatAdded) {
-      message = `${whoAdded} uploaded a ${whatTypeAdded} file "${whatAdded}" to "${onWhatPortal}"`;
-    } else {
-      message = `${whoAdded} uploaded a ${whatTypeAdded} file to "${onWhatPortal}"`;
-    }
-  }
-  return message;
-}
+const EVENT_NAME = "addedFiles";
+const BATCH_SIZE = 10;
 
 agenda.define(jobs.ADDED_FILE, async (job, done) => {
   try {
-    const eventName = 'addedFiles';
-    const eventProcessed = await EventProcessor.findOne({});
-    let addedFileCheckpt = 0;
-    if (eventProcessed) {
-      addedFileCheckpt = eventProcessed.addFile;
-    }
-    const addFileData = await axios.post(apiURL, {
-      query: `{
-        ${eventName}(first : 5, orderDirection: asc, orderBy: blockNumber, where: {blockNumber_gt: ${addedFileCheckpt}}) {
-          fileType,
-          metadataIPFSHash,
-          blockNumber,
-          by,
-          fileId,
-          portalAddress,
-          portalMetadataIPFSHash
-        }
-      }`,
-    });
-
-    const data = addFileData?.data?.data;
-    const addedFiles = data[eventName];
-
-    let newAddedFileCheckpt = null;
-    if (addedFiles && addedFiles.length) {
-      newAddedFileCheckpt = addedFiles.slice(-1)[0].blockNumber;
-    }
-
-    console.log('Recieved entries', jobs.ADDED_FILE, addedFiles.length);
-
-    await Promise.all(
-      addedFiles.map(async (addFile) => {
-        if (await notificationAlreadyPresent(addFile)) {
-          return;
-        }
-
-        const portal = await Portal.findOne({
-          portalAddress: addFile.portalAddress,
-        });
-
-        const fileDetails = await getFileDetails({
-          portal,
-          fileTypeNumber: addFile.fileType,
-          metadataIPFSHash: addFile.metadataIPFSHash,
-        });
-
-        const portalDetails = await getPortalMetadata({
-          portal,
-          portalMetadataIPFSHash: addFile.portalMetadataIPFSHash,
-        });
-
-        if (!fileDetails.forAddress.includes(addFile.by)) {
-          fileDetails.forAddress.push(addFile.by);
-        }
-
-        const notif = new Notification({
-          portalAddress: addFile.portalAddress,
-          audience: fileDetails.audience,
-          forAddress: fileDetails.forAddress,
-          blockNumber: addFile.blockNumber,
-          type: getNotificationType(fileDetails.metadata.source),
-          message: getFileAddMessage({
-            whoAdded: addFile.by,
-            whatTypeAdded: fileDetails.fileType,
-            whatSource: fileDetails.metadata.source,
-            whatAdded: fileDetails?.metadata?.name,
-            onWhatPortal: portalDetails?.name
-              ? portalDetails.name
-              : formatAddress(addFile.portalAddress),
-          }),
-          content: {
-            by: addFile.by,
-            metadataIPFSHash: addFile.metadataIPFSHash,
-            fileType: addFile.fileType,
-            fileMetadata: fileDetails.metadata,
-            fileId: addFile.fileId,
-            portalLogo: portalDetails.logo,
-            portalName: portalDetails.name,
-          },
-        });
-        await notif.save();
-      }),
+    const latestBlockNumber = await getLatestBlockNumberFromSubgraph();
+    const addedFilesCheckpoint = await fetchAddedFilesCheckpoint();
+    console.log({addedFilesCheckpoint});
+    const batchSize = BATCH_SIZE;
+    const addedFiles = await fetchAddedFilesEvents(
+      addedFilesCheckpoint,
+      batchSize
     );
-
-    if (newAddedFileCheckpt) {
-      await EventProcessor.updateOne(
-        {},
-        {
-          $set: {
-            addFile: newAddedFileCheckpt,
-          },
-        },
-        { upsert: true },
-      );
+    console.log("Received entries", jobs.ADDED_FILE, addedFiles.length);
+    await processAddedFilesEvents(addedFiles);
+    const lastAddedFilesCheckpoint = getLastAddedFilesCheckpoint({
+      addedFiles,
+      batchSize,
+      latestBlockNumber,
+    });
+    if (lastAddedFilesCheckpoint) {
+      await updateAddedFilesCheckpoint(lastAddedFilesCheckpoint);
     }
     done();
   } catch (err) {
-    console.error('error during job', jobs.ADDED_FILE, err);
+    console.error("Error in job", jobs.ADDED_FILE, err);
     done(err);
   } finally {
-    console.log('Done job', jobs.ADDED_FILE);
+    console.log("Job done", jobs.ADDED_FILE);
   }
 });
+
+async function getLatestBlockNumberFromSubgraph() {
+  const response = await axios.get(STATUS_API_URL);
+  const statusObject =
+    response?.data?.data["indexingStatusForCurrentVersion"] || {};
+  const chains = statusObject.chains || [];
+  const firstObject = chains.pop();
+  return parseInt(firstObject?.latestBlock?.number, 10) || 0;
+}
+
+async function fetchAddedFilesCheckpoint() {
+  const eventProcessed = await EventProcessor.findOne({});
+  return eventProcessed ? eventProcessed.addedFiles : 0;
+}
+
+async function fetchAddedFilesEvents(checkpoint, itemCount) {
+  const response = await axios.post(API_URL, {
+    query: `{
+      ${EVENT_NAME}(first: ${
+      itemCount || 5
+    }, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {
+        id,
+        fileId,
+        fileType,
+        metadataIPFSHash,
+        contentIPFSHash,
+        gateIPFSHash,
+        by,
+        blockNumber,
+        blockTimestamp,
+        portalAddress  
+      }
+    }`,
+  });
+  return response?.data?.data[EVENT_NAME] || [];
+}
+
+async function processAddedFilesEvent(addedFile) {
+  try {
+    const event = new Event({
+      eventName: EVENT_NAME,
+      data: addedFile,
+      uuid: addedFile.id,
+      portalAddress: addedFile.portalAddress,
+      blockNumber: addedFile.blockNumber,
+      jobName: jobs.ADDED_FILE,
+      blockTimestamp: addedFile.blockTimestamp,
+    });
+    await event.save();
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+async function processAddedFilesEvents(addedFiles) {
+  const allPromises = addedFiles.map(async (addedFiles) => {
+    await processAddedFilesEvent(addedFiles);
+  });
+  const data = await Promise.all(allPromises);
+  return data;
+}
+
+function getLastAddedFilesCheckpoint({
+  addedFiles,
+  batchSize,
+  latestBlockNumber,
+}) {
+  if (addedFiles.length < batchSize) {
+    return latestBlockNumber;
+  }
+  const lastElem = (addedFiles || []).pop();
+  return lastElem ? lastElem.blockNumber : null;
+}
+
+function updateAddedFilesCheckpoint(newCheckpoint) {
+  if (!newCheckpoint || newCheckpoint < 0) return;
+  return EventProcessor.updateOne(
+    {},
+    {
+      $set: {
+        addedFiles: newCheckpoint,
+      },
+    },
+    { upsert: true }
+  );
+}

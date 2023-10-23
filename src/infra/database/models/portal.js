@@ -9,10 +9,10 @@ _accountSchema = {
     trim: true,
     lowercase: true,
   },
-  addedBlocknumber: {
+  addedBlockNumber: {
     type: Number,
   },
-  removedBlocknumber: {
+  removedBlockNumber: {
     type: Number,
   },
 };

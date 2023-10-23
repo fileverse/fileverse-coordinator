@@ -5,15 +5,21 @@ const jobs = require("../jobs");
 const axios = require("axios");
 
 const API_URL = config.SUBGRAPH_API;
+const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
+
 const EVENT_NAME = "registeredCollaboratorKeys";
+const BATCH_SIZE = 10;
 
 agenda.define(jobs.REGISTERED_COLLABORATOR_KEY, async (job, done) => {
   try {
+    const latestBlockNumber = await getLatestBlockNumberFromSubgraph();
     const registeredCollaboratorKeyCheckpoint =
       await fetchRegisteredCollaboratorKeyCheckpoint();
+    const batchSize = BATCH_SIZE;
     const registeredCollaboratorKey =
       await fetchRegisteredCollaboratorKeyEvents(
-        registeredCollaboratorKeyCheckpoint
+        registeredCollaboratorKeyCheckpoint,
+        batchSize,
       );
     console.log(
       "Received entries",
@@ -22,7 +28,7 @@ agenda.define(jobs.REGISTERED_COLLABORATOR_KEY, async (job, done) => {
     );
     await processRegisteredCollaboratorKeyEvents(registeredCollaboratorKey);
     const lastRegisteredCollaboratorKeyCheckpoint =
-      getLastRegisteredCollaboratorKeyCheckpoint(registeredCollaboratorKey);
+      getLastRegisteredCollaboratorKeyCheckpoint({ registeredCollaboratorKey, batchSize, latestBlockNumber });
     if (lastRegisteredCollaboratorKeyCheckpoint) {
       await updateRegisteredCollaboratorKeyCheckpoint(
         lastRegisteredCollaboratorKeyCheckpoint
@@ -37,15 +43,23 @@ agenda.define(jobs.REGISTERED_COLLABORATOR_KEY, async (job, done) => {
   }
 });
 
+async function getLatestBlockNumberFromSubgraph() {
+  const response = await axios.get(STATUS_API_URL);
+  const statusObject = response?.data?.data['indexingStatusForCurrentVersion'] || {};
+  const chains = statusObject.chains || [];
+  const firstObject = chains.pop();
+  return parseInt(firstObject?.latestBlock?.number, 10) || 0;
+}
+
 async function fetchRegisteredCollaboratorKeyCheckpoint() {
   const eventProcessed = await EventProcessor.findOne({});
   return eventProcessed ? eventProcessed.registeredCollaboratorKey : 0;
 }
 
-async function fetchRegisteredCollaboratorKeyEvents(checkpoint) {
+async function fetchRegisteredCollaboratorKeyEvents(checkpoint, itemCount) {
   const response = await axios.post(API_URL, {
     query: `{
-      ${EVENT_NAME}(first: 5, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {\
+      ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {\
           id,
           portalAddress,
           blockNumber,
@@ -89,12 +103,16 @@ async function processRegisteredCollaboratorKeyEvents(
   return data;
 }
 
-function getLastRegisteredCollaboratorKeyCheckpoint(registeredCollaboratorKey) {
+function getLastRegisteredCollaboratorKeyCheckpoint({ registeredCollaboratorKey, batchSize, latestBlockNumber }) {
+  if (registeredCollaboratorKey.length < batchSize) {
+    return latestBlockNumber;
+  }
   const lastElem = (registeredCollaboratorKey || []).pop();
   return lastElem ? lastElem.blockNumber : null;
 }
 
 function updateRegisteredCollaboratorKeyCheckpoint(newCheckpoint) {
+  if (!newCheckpoint || newCheckpoint < 0) return;
   return EventProcessor.updateOne(
     {},
     {

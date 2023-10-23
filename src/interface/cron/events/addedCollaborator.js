@@ -5,14 +5,20 @@ const jobs = require("../jobs");
 const axios = require("axios");
 
 const API_URL = config.SUBGRAPH_API;
+const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
+
 const EVENT_NAME = "addedCollaborators";
+const BATCH_SIZE = 10;
 
 agenda.define(jobs.ADDED_COLLABORATOR, async (job, done) => {
   try {
+    const latestBlockNumber = await getLatestBlockNumberFromSubgraph();
     const addedCollaboratorCheckpoint =
       await fetchAddedCollaboratorCheckpoint();
+    const batchSize = BATCH_SIZE;
     const addedCollaborators = await fetchAddedCollaboratorEvents(
-      addedCollaboratorCheckpoint
+      addedCollaboratorCheckpoint,
+      batchSize,
     );
     console.log(
       "Received entries",
@@ -21,7 +27,7 @@ agenda.define(jobs.ADDED_COLLABORATOR, async (job, done) => {
     );
     await processAddedCollaboratorEvents(addedCollaborators);
     const lastAddedCollaboratorCheckpoint =
-      getLastAddedCollaboratorCheckpoint(addedCollaborators);
+      getLastAddedCollaboratorCheckpoint({ addedCollaborators, batchSize, latestBlockNumber });
     if (lastAddedCollaboratorCheckpoint) {
       await updateAddedCollaboratorCheckpoint(lastAddedCollaboratorCheckpoint);
     }
@@ -34,15 +40,23 @@ agenda.define(jobs.ADDED_COLLABORATOR, async (job, done) => {
   }
 });
 
+async function getLatestBlockNumberFromSubgraph() {
+  const response = await axios.get(STATUS_API_URL);
+  const statusObject = response?.data?.data['indexingStatusForCurrentVersion'] || {};
+  const chains = statusObject.chains || [];
+  const firstObject = chains.pop();
+  return parseInt(firstObject?.latestBlock?.number, 10) || 0;
+}
+
 async function fetchAddedCollaboratorCheckpoint() {
   const eventProcessed = await EventProcessor.findOne({});
   return eventProcessed ? eventProcessed.addedCollaborator : 0;
 }
 
-async function fetchAddedCollaboratorEvents(checkpoint) {
+async function fetchAddedCollaboratorEvents(checkpoint, itemCount) {
   const response = await axios.post(API_URL, {
     query: `{
-      ${EVENT_NAME}(first: 5, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {
+      ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {
           id,
           portalAddress,
           by,
@@ -80,12 +94,16 @@ async function processAddedCollaboratorEvents(addedCollaborators) {
   return data;
 }
 
-function getLastAddedCollaboratorCheckpoint(addedCollaborators) {
+function getLastAddedCollaboratorCheckpoint({ addedCollaborators, batchSize, latestBlockNumber }) {
+  if (addedCollaborators.length < batchSize) {
+    return latestBlockNumber;
+  }
   const lastElem = (addedCollaborators || []).pop();
   return lastElem ? lastElem.blockNumber : null;
 }
 
 function updateAddedCollaboratorCheckpoint(newCheckpoint) {
+  if (!newCheckpoint || newCheckpoint < 0) return;
   return EventProcessor.updateOne(
     {},
     {

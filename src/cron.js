@@ -10,7 +10,7 @@ async function graceful() {
 (async function () {
   try {
     await agenda.start();
-    // require('./interface/cron/events/addedFiles');
+    require('./interface/cron/events/addedFiles');
     // require('./interface/cron/events/editedFiles');
     require('./interface/cron/events/addedCollaborator');
     require('./interface/cron/events/registeredCollaboratorKey');
@@ -19,7 +19,7 @@ async function graceful() {
     require('./interface/cron/events/mint');
     require('./interface/cron/events/process');
 
-    // await agenda.every('20 seconds', jobs.ADDED_FILE);
+    await agenda.every('20 seconds', jobs.ADDED_FILE);
     // await agenda.every('20 seconds', jobs.EDITED_FILE);
     await agenda.every('20 seconds', jobs.ADDED_COLLABORATOR);
     await agenda.every('20 seconds', jobs.REGISTERED_COLLABORATOR_KEY);

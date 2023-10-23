@@ -4,11 +4,11 @@ const { Schema } = mongoose;
 const _eventProcessor = {};
 
 _eventProcessor.schema = new Schema({
-  addedFile: {
+  addedFiles: {
     type: Number,
     default: 0,
   },
-  editedFile: {
+  editedFiles: {
     type: Number,
     default: 0,
   },
