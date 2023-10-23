@@ -253,7 +253,7 @@ async function processAddedFileEvent({
         portalId: latestPortal._id,
         forAddress: address,
         audience: "collaborators_only",
-        message: `{{by}} uploaded a {{fileTypeText}} {{fileDataTypeText}} "{{fileName}}" to portal "{{portalAddress}}"`,
+        message: `{{by}} uploaded a {{fileType}} {{fileDataType}} "{{fileName}}" to portal "{{portalAddress}}"`,
         messageVars: [
           {
             name: "portalAddress",
@@ -321,7 +321,7 @@ async function processEditedFileEvent({
         portalId: latestPortal._id,
         forAddress: address,
         audience: "collaborators_only",
-        message: `{{by}} edited a {{fileTypeText}} {{fileDataTypeText}} "{{fileName}}" on portal "{{portalAddress}}"`,
+        message: `{{by}} edited a {{fileType}} {{fileDataType}} "{{fileName}}" on portal "{{portalAddress}}"`,
         messageVars: [
           {
             name: "portalAddress",
