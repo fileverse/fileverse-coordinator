@@ -364,6 +364,18 @@ async function processEditedFileEvent({
   }
 }
 
+async function processDeletedFileEvent({
+  portalAddress,
+  fileMetdataIPFSHash,
+  fileId,
+  fileType,
+  by,
+  blockNumber,
+  blockTimestamp,
+}) {
+  return;
+}
+
 async function processEvent(event) {
   if (event.eventName === "mints") {
     await processMintEvent({
@@ -423,16 +435,30 @@ async function processEvent(event) {
     });
   }
   if (event.eventName === "editedFiles") {
-    // send notification of someone removed a collaborator from portal to portal collaborators
-    await processEditedFileEvent({
-      portalAddress: event.portalAddress,
-      fileMetdataIPFSHash: event.data.metadataIPFSHash,
-      fileId: event.data.fileId,
-      fileType: event.data.fileType,
-      by: event.data.by,
-      blockNumber: event.blockNumber,
-      blockTimestamp: event.blockTimestamp,
-    });
+    const fileMetdataIPFSHash = event.data.metadataIPFSHash;
+    if (fileMetdataIPFSHash === 'bafybeify3xbts44jrrcidno7gxqs5fyvf5rbx3zkncnbjaibejjetvqtqe/metadata') {
+      // deleted file
+      await processDeletedFileEvent({
+        portalAddress: event.portalAddress,
+        fileMetdataIPFSHash: event.data.metadataIPFSHash,
+        fileId: event.data.fileId,
+        fileType: event.data.fileType,
+        by: event.data.by,
+        blockNumber: event.blockNumber,
+        blockTimestamp: event.blockTimestamp,
+      });
+    } else {
+      // send notification of someone removed a collaborator from portal to portal collaborators
+      await processEditedFileEvent({
+        portalAddress: event.portalAddress,
+        fileMetdataIPFSHash: event.data.metadataIPFSHash,
+        fileId: event.data.fileId,
+        fileType: event.data.fileType,
+        by: event.data.by,
+        blockNumber: event.blockNumber,
+        blockTimestamp: event.blockTimestamp,
+      });
+    }
   }
 }
 
