@@ -253,7 +253,7 @@ async function processAddedFileEvent({
         portalId: latestPortal._id,
         forAddress: address,
         audience: "collaborators_only",
-        message: `{{by}} uploaded a {{fileTypeText}} {{fileDataTypeText}} "{{fileName}}" to portal "{{portalAddress}}"`,
+        message: `{{by}} uploaded a {{fileType}} {{fileDataType}} "{{fileName}}" to portal "{{portalAddress}}"`,
         messageVars: [
           {
             name: "portalAddress",
@@ -321,7 +321,7 @@ async function processEditedFileEvent({
         portalId: latestPortal._id,
         forAddress: address,
         audience: "collaborators_only",
-        message: `{{by}} edited a {{fileTypeText}} {{fileDataTypeText}} "{{fileName}}" on portal "{{portalAddress}}"`,
+        message: `{{by}} edited a {{fileType}} {{fileDataType}} "{{fileName}}" on portal "{{portalAddress}}"`,
         messageVars: [
           {
             name: "portalAddress",
@@ -362,6 +362,18 @@ async function processEditedFileEvent({
     });
     await Promise.all(allPromises);
   }
+}
+
+async function processDeletedFileEvent({
+  portalAddress,
+  fileMetdataIPFSHash,
+  fileId,
+  fileType,
+  by,
+  blockNumber,
+  blockTimestamp,
+}) {
+  return;
 }
 
 async function processEvent(event) {
@@ -423,16 +435,30 @@ async function processEvent(event) {
     });
   }
   if (event.eventName === "editedFiles") {
-    // send notification of someone removed a collaborator from portal to portal collaborators
-    await processEditedFileEvent({
-      portalAddress: event.portalAddress,
-      fileMetdataIPFSHash: event.data.metadataIPFSHash,
-      fileId: event.data.fileId,
-      fileType: event.data.fileType,
-      by: event.data.by,
-      blockNumber: event.blockNumber,
-      blockTimestamp: event.blockTimestamp,
-    });
+    const fileMetdataIPFSHash = event.data.metadataIPFSHash;
+    if (fileMetdataIPFSHash === 'bafybeify3xbts44jrrcidno7gxqs5fyvf5rbx3zkncnbjaibejjetvqtqe/metadata') {
+      // deleted file
+      await processDeletedFileEvent({
+        portalAddress: event.portalAddress,
+        fileMetdataIPFSHash: event.data.metadataIPFSHash,
+        fileId: event.data.fileId,
+        fileType: event.data.fileType,
+        by: event.data.by,
+        blockNumber: event.blockNumber,
+        blockTimestamp: event.blockTimestamp,
+      });
+    } else {
+      // send notification of someone removed a collaborator from portal to portal collaborators
+      await processEditedFileEvent({
+        portalAddress: event.portalAddress,
+        fileMetdataIPFSHash: event.data.metadataIPFSHash,
+        fileId: event.data.fileId,
+        fileType: event.data.fileType,
+        by: event.data.by,
+        blockNumber: event.blockNumber,
+        blockTimestamp: event.blockTimestamp,
+      });
+    }
   }
 }
 
