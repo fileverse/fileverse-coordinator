@@ -1,6 +1,7 @@
 const Common = require("../../../domain/common");
 const Portal = require("../../../domain/portal");
 const createNotification = require("./createNotification");
+const completeNotificationAction = require("./completeNotificationAction");
 
 async function processMintEvent({ portalAddress, by }) {
   console.log(portalAddress);
@@ -66,7 +67,7 @@ async function processRegisteredCollaboratorKeysEvent({
   // disable invite notification action
   await completeNotificationAction({
     portalAddress: latestPortal.portalAddress,
-    forAddress: address,
+    forAddress: by,
     type: 'collaboratorInvite'
   });
   const allPromises = latestPortal.collaborators.map(async ({ address }) => {
@@ -106,14 +107,14 @@ async function processRemovedCollaboratorEvent({
   blockNumber,
   blockTimestamp,
 }) {
-  await Portal.removeCollaborator({ portalAddress, collaborator });
+  await Portal.removeCollaborator({ portalAddress, collaborator, blockNumber });
+  const latestPortal = await Portal.getPortal({ portalAddress });
   // disable invite notification action
   await completeNotificationAction({
     portalAddress: latestPortal.portalAddress,
-    forAddress: address,
+    forAddress: collaborator,
     type: 'collaboratorInvite'
   });
-  const latestPortal = await Portal.getPortal({ portalAddress });
   await createNotification({
     portalAddress: latestPortal.portalAddress,
     portalId: latestPortal._id,
@@ -191,7 +192,7 @@ async function getNotificationTypeFromFileDataType(fileDataType, created = false
   if (fileDataType === 'file') {
     return created ? 'addFile': 'editFile';
   }
-  return '';
+  return created ? 'addFile': 'editFile';
 }
 
 async function getFileTypeText(fileType) {
@@ -207,23 +208,23 @@ async function getFileTypeText(fileType) {
   if (fileType === '3' || fileType === 3) {
     return 'members only';
   }
-  return '';
+  return 'private';
 }
 
 async function getFileDataTypeText(fileDataType) {
-  if (fileDataType === 'dPage') {
-    return 'DPage';
-  }
-  if (fileDataType === 'whiteboard') {
-    return 'whiteboard';
-  }
-  if (fileDataType === 'dDoc') {
-    return 'DDoc';
-  }
-  if (fileDataType === 'file') {
+  if (fileDataType === 0 || fileDataType === '0') {
     return 'file';
   }
-  return '';
+  if (fileDataType === 1 || fileDataType === '1') {
+    return 'whiteboard';
+  }
+  if (fileDataType === 2 || fileDataType === '2') {
+    return 'DDoc';
+  }
+  if (fileDataType === 4 || fileDataType === '4') {
+    return 'DPage';
+  }
+  return 'file';
 }
 
 async function extractFileDataType(metadata) {
@@ -269,8 +270,8 @@ async function processAddedFileEvent({
           },
           {
             name: "fileName",
-            value: fileMetadata.name,
-            type: 'number'
+            value: fileMetadata && fileMetadata.name,
+            type: 'string'
           },
           {
             name: "fileType",

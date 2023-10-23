@@ -14,6 +14,7 @@ agenda.define(jobs.ADDED_FILE, async (job, done) => {
   try {
     const latestBlockNumber = await getLatestBlockNumberFromSubgraph();
     const addedFilesCheckpoint = await fetchAddedFilesCheckpoint();
+    console.log({addedFilesCheckpoint});
     const batchSize = BATCH_SIZE;
     const addedFiles = await fetchAddedFilesEvents(
       addedFilesCheckpoint,

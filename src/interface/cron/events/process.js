@@ -21,6 +21,8 @@ agenda.define(jobs.PROCESS, async (job, done) => {
 async function fetchMinCheckpoint() {
   const eventProcessed = await EventProcessor.findOne({});
   return Math.min(
+    eventProcessed.editedFiles,
+    eventProcessed.addedFiles,
     eventProcessed.addedCollaborator,
     eventProcessed.removedCollaborator,
     eventProcessed.registeredCollaboratorKey,
@@ -29,7 +31,7 @@ async function fetchMinCheckpoint() {
 
 async function fetchEvents(checkpoint, limit) {
   const events = await Event.find({
-    blockNumber: { $gte: checkpoint },
+    blockNumber: { $lte: checkpoint },
     processed: false,
   }).limit(limit);
   return events;
