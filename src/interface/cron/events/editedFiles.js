@@ -10,7 +10,7 @@ const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
 const EVENT_NAME = "editedFiles";
 const BATCH_SIZE = 10;
 
-agenda.define(jobs.ADDED_FILE, async (job, done) => {
+agenda.define(jobs.EDITED_FILE, async (job, done) => {
   try {
     const latestBlockNumber = await getLatestBlockNumberFromSubgraph();
     const editedFilesCheckpoint = await fetchEditedFilesCheckpoint();
@@ -19,7 +19,7 @@ agenda.define(jobs.ADDED_FILE, async (job, done) => {
       editedFilesCheckpoint,
       batchSize
     );
-    console.log("Received entries", jobs.ADDED_FILE, editedFiles.length);
+    console.log("Received entries", jobs.EDITED_FILE, editedFiles.length);
     await processEditedFilesEvents(editedFiles);
     const lastEditedFilesCheckpoint = getLastEditedFilesCheckpoint({
       editedFiles,
@@ -31,10 +31,10 @@ agenda.define(jobs.ADDED_FILE, async (job, done) => {
     }
     done();
   } catch (err) {
-    console.error("Error in job", jobs.ADDED_FILE, err);
+    console.error("Error in job", jobs.EDITED_FILE, err);
     done(err);
   } finally {
-    console.log("Job done", jobs.ADDED_FILE);
+    console.log("Job done", jobs.EDITED_FILE);
   }
 });
 
@@ -82,7 +82,7 @@ async function processEditedFilesEvent(addedFile) {
       uuid: addedFile.id,
       portalAddress: addedFile.portalAddress,
       blockNumber: addedFile.blockNumber,
-      jobName: jobs.ADDED_FILE,
+      jobName: jobs.EDITED_FILE,
       blockTimestamp: addedFile.blockTimestamp,
     });
     await event.save();

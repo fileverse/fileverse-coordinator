@@ -68,7 +68,6 @@ async function fetchRegisteredCollaboratorKeyEvents(checkpoint, itemCount) {
         }
       }`,
   });
-  console.log(response?.data);
   return response?.data?.data[EVENT_NAME] || [];
 }
 

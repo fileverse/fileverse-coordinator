@@ -83,7 +83,6 @@ async function processMintEvents(mints) {
     await processMintEvent(mint);
   });
   const data = await Promise.all(allPromises);
-  console.log(data);
   return data;
 }
 
