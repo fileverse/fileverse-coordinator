@@ -3,8 +3,9 @@ const Portal = require("../../../domain/portal");
 const createNotification = require("./createNotification");
 const completeNotificationAction = require("./completeNotificationAction");
 
-async function processMintEvent({ portalAddress, by }) {
+async function processMintEvent({ portalAddress, by, blockNumber }) {
   await Portal.getPortal({ portalAddress });
+  await Portal.addCollaborator({ portalAddress, collaborator: by, blockNumber });
 }
 
 async function processUpdatedPortalMetadataEvent({
@@ -387,6 +388,8 @@ async function processEvent(event) {
     await processMintEvent({
       portalAddress: event.portalAddress,
       by: event.data.account,
+      blockNumber: event.blockNumber,
+      blockTimestamp: event.blockTimestamp,
     });
   }
   if (event.eventName === "updatedPortalDatas") {
@@ -396,6 +399,8 @@ async function processEvent(event) {
       portalAddress: event.portalAddress,
       ipfsHash: event.data.metadataIPFSHash,
       by: event.data.by,
+      blockNumber: event.blockNumber,
+      blockTimestamp: event.blockTimestamp,
     });
   }
   if (event.eventName === "addedCollaborators") {
