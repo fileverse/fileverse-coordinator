@@ -42,7 +42,7 @@ _notification.schema = new Schema({
   },
   action: {
     type: Boolean,
-    default: true,
+    default: false,
   },
   message: { type: String, trim: true },
   messageVars: [MessageVars],
