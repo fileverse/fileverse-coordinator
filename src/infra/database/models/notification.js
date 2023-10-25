@@ -36,6 +36,10 @@ _notification.schema = new Schema({
     type: Object,
     trim: true,
   },
+  context: {
+    type: Schema.Types.Mixed,
+    default: {},
+  },
   action: {
     type: Boolean,
     default: true,
