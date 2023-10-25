@@ -290,6 +290,9 @@ async function processAddedFileEvent({
         by,
         blockNumber,
         blockTimestamp,
+        context: {
+          fileId,
+        },
       });
     });
     await Promise.all(allPromises);
@@ -358,6 +361,9 @@ async function processEditedFileEvent({
         by,
         blockNumber,
         blockTimestamp,
+        context: {
+          fileId,
+        },
       });
     });
     await Promise.all(allPromises);
