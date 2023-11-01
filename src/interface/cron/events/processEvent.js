@@ -33,6 +33,7 @@ async function processAddedCollaboratorEvent({
     portalAddress: latestPortal.portalAddress,
     portalId: latestPortal._id,
     forAddress: collaborator,
+    action: true,
     audience: "individuals",
     message:
       "{{by}} invited you to become collaborator of portal {{portalAddress}}",
@@ -75,6 +76,7 @@ async function processRegisteredCollaboratorKeysEvent({
       portalAddress: latestPortal.portalAddress,
       portalId: latestPortal._id,
       forAddress: address,
+      action: false,
       audience: "collaborators_only",
       message: "{{by}} joined the portal {{portalAddress}}",
       messageVars: [
@@ -117,6 +119,7 @@ async function processRemovedCollaboratorEvent({
     portalAddress: latestPortal.portalAddress,
     portalId: latestPortal._id,
     forAddress: collaborator,
+    action: false,
     audience: "individuals",
     message:
       "{{account}} was removed from portal {{portalAddress}} by {{by}}",
@@ -151,6 +154,7 @@ async function processRemovedCollaboratorEvent({
       forAddress: address,
       audience: "collaborators_only",
       message: "{{account}} was removed from portal {{portalAddress}} by {{by}}",
+      action: false,
       messageVars: [
         {
           name: "portalAddress",
@@ -253,6 +257,7 @@ async function processAddedFileEvent({
         portalAddress: latestPortal.portalAddress,
         portalId: latestPortal._id,
         forAddress: address,
+        action: false,
         audience: "collaborators_only",
         message: `{{by}} uploaded a {{fileType}} {{fileDataType}} "{{fileName}}" to portal "{{portalAddress}}"`,
         messageVars: [
@@ -324,6 +329,7 @@ async function processEditedFileEvent({
         portalAddress: latestPortal.portalAddress,
         portalId: latestPortal._id,
         forAddress: address,
+        action: false,
         audience: "collaborators_only",
         message: `{{by}} edited a {{fileType}} {{fileDataType}} "{{fileName}}" on portal "{{portalAddress}}"`,
         messageVars: [
