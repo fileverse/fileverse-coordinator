@@ -221,10 +221,10 @@ async function getFileDataTypeText(fileDataType) {
     return 'whiteboard';
   }
   if (fileDataType === 2 || fileDataType === '2') {
-    return 'DDoc';
+    return 'dDoc';
   }
   if (fileDataType === 4 || fileDataType === '4') {
-    return 'DPage';
+    return 'dPage';
   }
   return 'file';
 }
