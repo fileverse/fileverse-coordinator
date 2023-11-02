@@ -259,7 +259,7 @@ async function processAddedFileEvent({
         forAddress: address,
         action: false,
         audience: "collaborators_only",
-        message: `{{by}} uploaded a {{fileType}} {{fileDataType}} "{{fileName}}" to portal "{{portalAddress}}"`,
+        message: `{{by}} published a {{fileType}} {{fileDataType}} "{{fileName}}" to portal "{{portalAddress}}"`,
         messageVars: [
           {
             name: "portalAddress",
