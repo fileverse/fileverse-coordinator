@@ -9,6 +9,7 @@ const canCreateNotification = require('../middleware/canCreateNotification');
 const process = require('./process');
 const unread = require('./unread');
 const markRead = require('./markRead');
+const reject = require('./reject');
 
 router.get(
   '/unread',
@@ -32,6 +33,12 @@ router.post(
   '/mark-read',
   asyncHandler(canCreateNotification),
   asyncHandlerArray(markRead),
+);
+
+router.post(
+  '/reject',
+  asyncHandler(canCreateNotification),
+  asyncHandlerArray(reject),
 );
 
 router.get('/', asyncHandler(canViewNotification), asyncHandlerArray(get));

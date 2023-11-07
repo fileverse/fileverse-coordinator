@@ -5,4 +5,5 @@ module.exports = {
   unread: require('./unread'),
   markComplete: require('./markComplete'),
   markRead: require('./markRead'),
+  reject: require('./reject'),
 };
