@@ -78,7 +78,7 @@ async function processRegisteredCollaboratorKeysEvent({
       forAddress: address,
       action: false,
       audience: "collaborators_only",
-      message: "{{by}} joined the portal {{portalAddress}}",
+      message: "{{by}} accepted the invitation to become a collaborator of the portal {{portalAddress}}",
       messageVars: [
         {
           name: "portalAddress",
@@ -233,6 +233,11 @@ async function extractFileDataType(metadata) {
   return metadata?.source;
 }
 
+async function extractFileOwner(metadata) {
+  const owner = metadata?.owner;
+  return owner && owner.toLowerCase();
+}
+
 async function processAddedFileEvent({
   portalAddress,
   fileMetdataIPFSHash,
@@ -245,13 +250,14 @@ async function processAddedFileEvent({
   fileType = parseInt(fileType, 10);
   const fileMetadata = await Common.resolveIPFSHash(fileMetdataIPFSHash);
   const fileDataType = await extractFileDataType(fileMetadata);
+  const owner = await extractFileOwner(fileMetadata);
   const fileTypeText = await getFileTypeText(fileType);
   const fileDataTypeText = await getFileDataTypeText(fileDataType);
   const notificationType = await getNotificationTypeFromFileDataType(fileDataType, true);
   const latestPortal = await Portal.getPortal({ portalAddress });
   if (fileType === 1 || fileType === 0) {
     const allPromises = latestPortal.collaborators.map(async ({ address }) => {
-      if (by === address) return;
+      if (by === address || owner === address) return;
       // create notification for each collaborator
       await createNotification({
         portalAddress: latestPortal.portalAddress,
@@ -317,13 +323,14 @@ async function processEditedFileEvent({
   fileType = parseInt(fileType, 10);
   const fileMetadata = await Common.resolveIPFSHash(fileMetdataIPFSHash);
   const fileDataType = await extractFileDataType(fileMetadata);
+  const owner = await extractFileOwner(fileMetadata);
   const fileTypeText = await getFileTypeText(fileType);
   const fileDataTypeText = await getFileDataTypeText(fileDataType);
   const notificationType = await getNotificationTypeFromFileDataType(fileDataType, false);
   const latestPortal = await Portal.getPortal({ portalAddress });
   if (fileType === 1 || fileType === 0) {
     const allPromises = latestPortal.collaborators.map(async ({ address }) => {
-      if (by === address) return;
+      if (by === address || owner === address) return;
       // create notification for each collaborator
       await createNotification({
         portalAddress: latestPortal.portalAddress,
