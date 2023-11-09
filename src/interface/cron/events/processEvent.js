@@ -25,9 +25,7 @@ async function processAddedCollaboratorEvent({
   blockNumber,
   blockTimestamp,
 }) {
-  // add collaborator to portal collection
   // send individual notification to the collaborator
-  await Portal.addCollaborator({ portalAddress, collaborator, blockNumber });
   const latestPortal = await Portal.getPortal({ portalAddress });
   await createNotification({
     portalAddress: latestPortal.portalAddress,
@@ -63,6 +61,8 @@ async function processRegisteredCollaboratorKeysEvent({
   blockTimestamp,
 }) {
   const latestPortal = await Portal.getPortal({ portalAddress });
+  // add collaborator to portal collection
+  await Portal.addCollaborator({ portalAddress, collaborator: by, blockNumber });
   // disable invite notification action
   await completeNotificationAction({
     portalAddress: latestPortal.portalAddress,
@@ -294,7 +294,7 @@ async function processAddedFileEvent({
           },
           {
             name: "by",
-            value: by,
+            value: owner || by,
             type: 'address'
           },
         ],
@@ -367,7 +367,7 @@ async function processEditedFileEvent({
           },
           {
             name: "by",
-            value: by,
+            value: owner || by,
             type: 'address'
           },
         ],
