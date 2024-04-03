@@ -3,7 +3,7 @@ const { Schema } = mongoose;
 
 const _event = {};
 
-export const EVENT_MAX_RETRIES = 3;
+const EVENT_MAX_RETRIES = 3;
 
 _event.schema = new Schema({
   uuid: {
