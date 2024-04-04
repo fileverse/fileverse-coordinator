@@ -1,0 +1,1 @@
+const EVENT_PROCESS_MAX_RETRIES = 3;
