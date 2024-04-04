@@ -1,9 +1,7 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
-
 const _event = {};
-
-const EVENT_MAX_RETRIES = 3;
+const { EVENT_PROCESS_MAX_RETRIES } = require("../../../constants");
 
 _event.schema = new Schema({
   uuid: {
@@ -30,7 +28,7 @@ _event.schema = new Schema({
   processed: { type: Boolean, default: false },
   timeStamp: { type: Date, required: true, default: Date.now },
   retries: {
-    type: Number, required: true, default: 0, Range: { min: 0, max: EVENT_MAX_RETRIES }
+    type: Number, required: true, default: 0, Range: { min: 0, max: EVENT_PROCESS_MAX_RETRIES }
   },
 }
 );
