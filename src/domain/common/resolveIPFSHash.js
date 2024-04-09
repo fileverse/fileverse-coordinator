@@ -6,7 +6,7 @@ const axios = require('axios');
  * If `config.IPFS_BASE_URLS` is defined, it will be split by comma (',') to form the array.
  * Otherwise, a default array of IPFS base URLs will be used.
  */
-const IPFS_BASE_URLS = config.IPFS_BASE_URLS.split(',') || [
+const IPFS_BASE_URLS = config.IPFS_BASE_URLS ? config.IPFS_BASE_URLS.split(',') : [
   'https://w3s.link/ipfs/',
   'https://ipfs.io/ipfs/',
   'https://dweb.link/ipfs/',
