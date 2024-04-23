@@ -32,7 +32,7 @@ app.use(express.json());
 app.use(logger('combined'));
 
 let corsOptions = {
-  origin: 'https://dev-fileverse.on.fleek.co/',
+  origin: 'https://dev-fileverse.on.fleek.co',
   optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
