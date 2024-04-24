@@ -30,14 +30,8 @@ app.use(express.json());
 
 // Use default logger for now
 app.use(logger('combined'));
-
-let corsOptions = {
-  origin: 'https://dev-fileverse.on.fleek.co',
-  optionsSuccessStatus: 200,
-};
-app.use(cors(corsOptions));
-
-
+// to allow all orgins in cors
+app.use(cors());
 app.use(
   helmet({
     contentSecurityPolicy: false,
