@@ -36,6 +36,7 @@
     "node-cron": "^3.0.2",
     "request": "^2.88.2",
     "ucans": "^0.10.0",
+    "url-metadata": "^4.1.0",
     "web3.storage": "^4.4.0"
   },
   "devDependencies": {
