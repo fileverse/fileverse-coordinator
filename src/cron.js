@@ -18,6 +18,7 @@ async function graceful() {
     require('./interface/cron/events/updatedPortalMetadata');
     require('./interface/cron/events/mint');
     require('./interface/cron/events/process');
+    require('./interface/cron/events/publicPortalIndex');
 
     await agenda.every('20 seconds', jobs.ADDED_FILE);
     await agenda.every('20 seconds', jobs.EDITED_FILE);
@@ -27,6 +28,7 @@ async function graceful() {
     await agenda.every('20 seconds', jobs.UPDATED_PORTAL_METADATA);
     await agenda.every('20 seconds', jobs.MINT);
     await agenda.every('10 seconds', jobs.PROCESS);
+    await agenda.every('10 seconds', jobs.PORTAL_INDEX);
   } catch (err) {
     console.log(err.stack);
     await graceful();
