@@ -17,6 +17,7 @@
   "author": "Vijay Krishnavanshi",
   "license": "ISC",
   "dependencies": {
+    "@neynar/nodejs-sdk": "^1.23.1",
     "@pinata/sdk": "^1.1.26",
     "agenda": "^5.0.0",
     "agendash": "^4.0.0",
