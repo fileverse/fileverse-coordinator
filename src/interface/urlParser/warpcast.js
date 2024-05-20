@@ -1,9 +1,9 @@
 const { NeynarAPIClient, CastParamType } = require("@neynar/nodejs-sdk");
 const config = require('../../../config');
 
-const NEYMAR_API_KEY = config.NEYMAR_API_KEY;
+const NEYNAR_API_KEY = config.NEYNAR_API_KEY;
 
-const client = new NeynarAPIClient(NEYMAR_API_KEY);
+const client = new NeynarAPIClient(NEYNAR_API_KEY);
 
 async function getChannelMetadata(url) {
     // channel name stays here /~/channel/<channelName>/...
