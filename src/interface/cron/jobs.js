@@ -7,6 +7,7 @@ const jobs = {
   UPDATED_PORTAL_METADATA: 'UPDATED_PORTAL_METADATA',
   MINT: 'MINT',
   PROCESS: 'PROCESS',
+  PORTAL_INDEX: 'PORTAL_INDEX',
 };
 
 module.exports = jobs;
