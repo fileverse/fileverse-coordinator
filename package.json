@@ -17,6 +17,7 @@
   "author": "Vijay Krishnavanshi",
   "license": "ISC",
   "dependencies": {
+    "@neynar/nodejs-sdk": "^1.23.1",
     "@pinata/sdk": "^1.1.26",
     "agenda": "^5.0.0",
     "agendash": "^4.0.0",
@@ -36,6 +37,7 @@
     "node-cron": "^3.0.2",
     "request": "^2.88.2",
     "ucans": "^0.10.0",
+    "url-metadata": "^4.1.0",
     "web3.storage": "^4.4.0"
   },
   "devDependencies": {

@@ -30,6 +30,7 @@ app.use(express.json());
 
 // Use default logger for now
 app.use(logger('combined'));
+// to allow all orgins in cors
 app.use(cors());
 app.use(
   helmet({
