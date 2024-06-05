@@ -23,14 +23,14 @@ agenda.define(jobs.ADDED_FILE, async (job, done) => {
     );
     console.log("Received entries", jobs.ADDED_FILE, addedFiles.length);
     await processAddedFilesEvents(addedFiles);
-  } catch (err) {
-    console.error("Error in job", jobs.ADDED_FILE, err);
-    done(err);
-  } finally {
     if (addedFiles.length > 0) {
       await updateAddedFilesCheckpoint(addedFiles[addedFiles.length - 1].blockNumber);
     }
     done();
+  } catch (err) {
+    console.error("Error in job", jobs.ADDED_FILE, err);
+    done(err);
+  } finally {
     console.log("Job done", jobs.ADDED_FILE);
   }
 });
@@ -41,14 +41,14 @@ async function fetchAddedFilesCheckpoint() {
 }
 
 async function fetchAddedFilesEvents(checkpoint, itemCount) {
-  const fetchedEvents = await fetchAddedEventsID(EVENT_NAME);
+  const existingEventIds = await fetchAddedEventsID(EVENT_NAME);
   const response = await axios.post(API_URL, {
     query: `{
       ${EVENT_NAME}(first: ${itemCount || 5
       }, orderDirection: asc, orderBy: blockNumber, 
       where: {
         blockNumber_gte : ${checkpoint},
-        id_not_in:[${fetchedEvents.map(event => `"${event}"`).join(', ')}]
+        id_not_in:[${existingEventIds.map(event => `"${event}"`).join(', ')}]
       }) {
         id,
         fileId,

@@ -26,6 +26,11 @@ agenda.define(jobs.REMOVED_COLLABORATOR, async (job, done) => {
       jobs.REMOVED_COLLABORATOR,
       removedCollaborators.length
     );
+    if (removedCollaborators.length > 0) {
+      await updateRemovedCollaboratorCheckpoint(
+        removedCollaborators[removedCollaborators.length - 1].blockNumber
+      );
+    }
     await processRemovedCollaboratorEvents(removedCollaborators);
 
     done();
@@ -33,11 +38,6 @@ agenda.define(jobs.REMOVED_COLLABORATOR, async (job, done) => {
     console.error("Error in job", jobs.REMOVED_COLLABORATOR, err);
     done(err);
   } finally {
-    if (removedCollaborators.length > 0) {
-      await updateRemovedCollaboratorCheckpoint(
-        removedCollaborators[removedCollaborators.length - 1].blockNumber
-      );
-    }
     console.log("Job done", jobs.REMOVED_COLLABORATOR);
   }
 });
@@ -48,13 +48,13 @@ async function fetchRemovedCollaboratorCheckpoint() {
 }
 
 async function fetchRemovedCollaboratorEvents(checkpoint, itemCount) {
-  const fetchedEvents = await fetchAddedEventsID(EVENT_NAME);
+  const existingEventIds = await fetchAddedEventsID(EVENT_NAME);
   const response = await axios.post(API_URL, {
     query: `{
       ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, 
         where: {
           blockNumber_gte : ${checkpoint},
-          id_not_in:[${fetchedEvents.map(event => `"${event}"`).join(', ')}]
+          id_not_in:[${existingEventIds.map(event => `"${event}"`).join(', ')}]
         }) {
           id
           portalAddress,

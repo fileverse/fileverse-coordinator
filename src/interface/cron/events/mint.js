@@ -20,14 +20,14 @@ agenda.define(jobs.MINT, async (job, done) => {
     mints = await fetchMintEvents(mintCheckpoint, batchSize);
     console.log("Received entries", jobs.MINT, mints.length);
     await processMintEvents(mints);
+    if (mints.length > 0) {
+      await updateMintCheckpoint(mints[mints.length - 1].blockNumber);
+    }
     done();
   } catch (err) {
     console.error("Error in job", jobs.MINT, err);
     done(err);
   } finally {
-    if (mints.length > 0) {
-      await updateMintCheckpoint(mints[mints.length - 1].blockNumber);
-    }
     console.log("Job done", jobs.MINT);
   }
 });
@@ -38,13 +38,13 @@ async function fetchMintCheckpoint() {
 }
 
 async function fetchMintEvents(checkpoint, itemCount) {
-  const fetchedEvents = await fetchAddedEventsID(EVENT_NAME);
+  const existingEventIds = await fetchAddedEventsID(EVENT_NAME);
   const response = await axios.post(API_URL, {
     query: `{
       ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, 
         where: {
           blockNumber_gte : ${checkpoint},
-          id_not_in:[${fetchedEvents.map(event => `"${event}"`).join(', ')}]
+          id_not_in:[${existingEventIds.map(event => `"${event}"`).join(', ')}]
          }) {
           id,
           portal,
