@@ -42,14 +42,6 @@ agenda.define(jobs.UPDATED_PORTAL_METADATA, async (job, done) => {
   }
 });
 
-async function getLatestBlockNumberFromSubgraph() {
-  const response = await axios.get(STATUS_API_URL);
-  const statusObject = response?.data?.data['indexingStatusForCurrentVersion'] || {};
-  const chains = statusObject.chains || [];
-  const firstObject = chains.pop();
-  return parseInt(firstObject?.latestBlock?.number, 10) || 0;
-}
-
 async function fetchUpdatedPortalMetadataCheckpoint() {
   const eventProcessed = await EventProcessor.findOne({});
   return eventProcessed ? eventProcessed.updatedPortalMetadata : 0;
