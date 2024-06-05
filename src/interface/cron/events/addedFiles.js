@@ -11,29 +11,33 @@ const EVENT_NAME = "addedFiles";
 const BATCH_SIZE = 10;
 
 agenda.define(jobs.ADDED_FILE, async (job, done) => {
+  let addedFiles = [];
   try {
-    const latestBlockNumber = await getLatestBlockNumberFromSubgraph();
     const addedFilesCheckpoint = await fetchAddedFilesCheckpoint();
     const batchSize = BATCH_SIZE;
-    const addedFiles = await fetchAddedFilesEvents(
+    addedFiles = await fetchAddedFilesEvents(
       addedFilesCheckpoint,
       batchSize
     );
     console.log("Received entries", jobs.ADDED_FILE, addedFiles.length);
     await processAddedFilesEvents(addedFiles);
-    const lastAddedFilesCheckpoint = getLastAddedFilesCheckpoint({
-      addedFiles,
-      batchSize,
-      latestBlockNumber,
-    });
-    if (lastAddedFilesCheckpoint) {
-      await updateAddedFilesCheckpoint(lastAddedFilesCheckpoint);
-    }
-    done();
   } catch (err) {
     console.error("Error in job", jobs.ADDED_FILE, err);
     done(err);
   } finally {
+    // const latestBlockNumber = await getLatestBlockNumberFromSubgraph();
+    // const lastAddedFilesCheckpoint = getLastAddedFilesCheckpoint({
+    //   addedFiles,
+    //   batchSize,
+    //   latestBlockNumber,
+    // });
+    // if (lastAddedFilesCheckpoint) {
+    //   await updateAddedFilesCheckpoint(lastAddedFilesCheckpoint);
+    // }
+    if (addedFiles.length > 0) {
+      await updateAddedFilesCheckpoint(addedFiles[addedFiles.length - 1].blockNumber);
+    }
+    done();
     console.log("Job done", jobs.ADDED_FILE);
   }
 });
@@ -55,9 +59,8 @@ async function fetchAddedFilesCheckpoint() {
 async function fetchAddedFilesEvents(checkpoint, itemCount) {
   const response = await axios.post(API_URL, {
     query: `{
-      ${EVENT_NAME}(first: ${
-      itemCount || 5
-    }, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {
+      ${EVENT_NAME}(first: ${itemCount || 5
+      }, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gt : ${checkpoint} }) {
         id,
         fileId,
         fileType,
