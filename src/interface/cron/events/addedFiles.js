@@ -57,7 +57,7 @@ async function fetchAddedFilesEvents(checkpoint, itemCount) {
       }, orderDirection: asc, orderBy: blockNumber, 
       where: {
         blockNumber_gte : ${checkpoint},
-        id_not_in:${fetchedEvents}
+        id_not_in:[${fetchedEvents.map(event => `"${event}"`).join(', ')}]
       }) {
         id,
         fileId,
