@@ -91,14 +91,6 @@ async function processAddedCollaboratorEvents(addedCollaborators) {
   return data;
 }
 
-function getLastAddedCollaboratorCheckpoint({ addedCollaborators, batchSize, latestBlockNumber }) {
-  if (addedCollaborators.length < batchSize) {
-    return latestBlockNumber;
-  }
-  const lastElem = (addedCollaborators || []).pop();
-  return lastElem ? lastElem.blockNumber : null;
-}
-
 function updateAddedCollaboratorCheckpoint(newCheckpoint) {
   if (!newCheckpoint || newCheckpoint < 0) return;
   return EventProcessor.updateOne(

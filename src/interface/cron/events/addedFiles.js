@@ -91,18 +91,6 @@ async function processAddedFilesEvents(addedFiles) {
   return data;
 }
 
-function getLastAddedFilesCheckpoint({
-  addedFiles,
-  batchSize,
-  latestBlockNumber,
-}) {
-  if (addedFiles.length < batchSize) {
-    return latestBlockNumber;
-  }
-  const lastElem = (addedFiles || []).pop();
-  return lastElem ? lastElem.blockNumber : null;
-}
-
 function updateAddedFilesCheckpoint(newCheckpoint) {
   if (!newCheckpoint || newCheckpoint < 0) return;
   return EventProcessor.updateOne(

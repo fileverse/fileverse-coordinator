@@ -93,14 +93,6 @@ async function processRemovedCollaboratorEvents(removedCollaborators) {
   return data;
 }
 
-function getLastRemovedCollaboratorCheckpoint({ removedCollaborators, batchSize, latestBlockNumber }) {
-  if (removedCollaborators.length < batchSize) {
-    return latestBlockNumber;
-  }
-  const lastElem = (removedCollaborators || []).pop();
-  return lastElem ? lastElem.blockNumber : null;
-}
-
 function updateRemovedCollaboratorCheckpoint(newCheckpoint) {
   if (!newCheckpoint || newCheckpoint < 0) return;
   return EventProcessor.updateOne(

@@ -94,18 +94,6 @@ async function processEditedFilesEvents(editedFiles) {
   return data;
 }
 
-function getLastEditedFilesCheckpoint({
-  editedFiles,
-  batchSize,
-  latestBlockNumber,
-}) {
-  if (editedFiles.length < batchSize) {
-    return latestBlockNumber;
-  }
-  const lastElem = (editedFiles || []).pop();
-  return lastElem ? lastElem.blockNumber : null;
-}
-
 function updateEditedFilesCheckpoint(newCheckpoint) {
   if (!newCheckpoint || newCheckpoint < 0) return;
   return EventProcessor.updateOne(
