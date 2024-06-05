@@ -1,22 +1,21 @@
 const config = require("../../../../config");
+const constants = require("../../../constants");
 const { EventProcessor, Event } = require("../../../infra/database/models");
+const EventUtil = require("./utils");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
 
 const API_URL = config.SUBGRAPH_API;
-const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
-
 const EVENT_NAME = "registeredCollaboratorKeys";
-const BATCH_SIZE = 10;
+const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
 agenda.define(jobs.REGISTERED_COLLABORATOR_KEY, async (job, done) => {
+  let registeredCollaboratorKey = [];
   try {
-    const latestBlockNumber = await getLatestBlockNumberFromSubgraph();
-    const registeredCollaboratorKeyCheckpoint =
-      await fetchRegisteredCollaboratorKeyCheckpoint();
+    const registeredCollaboratorKeyCheckpoint = await fetchRegisteredCollaboratorKeyCheckpoint();
     const batchSize = BATCH_SIZE;
-    const registeredCollaboratorKey =
+    registeredCollaboratorKey =
       await fetchRegisteredCollaboratorKeyEvents(
         registeredCollaboratorKeyCheckpoint,
         batchSize,
@@ -27,12 +26,9 @@ agenda.define(jobs.REGISTERED_COLLABORATOR_KEY, async (job, done) => {
       registeredCollaboratorKey.length
     );
     await processRegisteredCollaboratorKeyEvents(registeredCollaboratorKey);
-    const lastRegisteredCollaboratorKeyCheckpoint =
-      getLastRegisteredCollaboratorKeyCheckpoint({ registeredCollaboratorKey, batchSize, latestBlockNumber });
-    if (lastRegisteredCollaboratorKeyCheckpoint) {
-      await updateRegisteredCollaboratorKeyCheckpoint(
-        lastRegisteredCollaboratorKeyCheckpoint
-      );
+    const lastEventCheckpont = await EventUtil.getLastEventCheckpoint(registeredCollaboratorKey);
+    if (lastEventCheckpont) {
+      await updateRegisteredCollaboratorKeyCheckpoint(lastEventCheckpont);
     }
     done();
   } catch (err) {
@@ -43,23 +39,20 @@ agenda.define(jobs.REGISTERED_COLLABORATOR_KEY, async (job, done) => {
   }
 });
 
-async function getLatestBlockNumberFromSubgraph() {
-  const response = await axios.get(STATUS_API_URL);
-  const statusObject = response?.data?.data['indexingStatusForCurrentVersion'] || {};
-  const chains = statusObject.chains || [];
-  const firstObject = chains.pop();
-  return parseInt(firstObject?.latestBlock?.number, 10) || 0;
-}
-
 async function fetchRegisteredCollaboratorKeyCheckpoint() {
   const eventProcessed = await EventProcessor.findOne({});
   return eventProcessed ? eventProcessed.registeredCollaboratorKey : 0;
 }
 
 async function fetchRegisteredCollaboratorKeyEvents(checkpoint, itemCount) {
+  const existingEventIds = await EventUtil.fetchAddedEventsID(EVENT_NAME);
   const response = await axios.post(API_URL, {
     query: `{
-      ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {\
+      ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber,
+        where: {
+          blockNumber_gte : ${checkpoint},
+          id_not_in:[${existingEventIds.map(event => `"${event}"`).join(', ')}]
+        }) {\
           id,
           portalAddress,
           blockNumber,
@@ -100,14 +93,6 @@ async function processRegisteredCollaboratorKeyEvents(
   );
   const data = await Promise.all(allPromises);
   return data;
-}
-
-function getLastRegisteredCollaboratorKeyCheckpoint({ registeredCollaboratorKey, batchSize, latestBlockNumber }) {
-  if (registeredCollaboratorKey.length < batchSize) {
-    return latestBlockNumber;
-  }
-  const lastElem = (registeredCollaboratorKey || []).pop();
-  return lastElem ? lastElem.blockNumber : null;
 }
 
 function updateRegisteredCollaboratorKeyCheckpoint(newCheckpoint) {

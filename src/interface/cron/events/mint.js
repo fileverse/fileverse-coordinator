@@ -1,28 +1,27 @@
 const config = require("../../../../config");
+const constants = require("../../../constants");
+
 const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
+const EventUtil = require("./utils");
 
 const API_URL = config.SUBGRAPH_API;
-const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
 const EVENT_NAME = "mints";
-const BATCH_SIZE = 10;
+const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
 agenda.define(jobs.MINT, async (job, done) => {
+  let mints = [];
   try {
-    const latestBlockNumber = await getLatestBlockNumberFromSubgraph();
     const mintCheckpoint = await fetchMintCheckpoint();
     const batchSize = BATCH_SIZE;
-    const mints = await fetchMintEvents(mintCheckpoint, batchSize);
-
+    mints = await fetchMintEvents(mintCheckpoint, batchSize);
     console.log("Received entries", jobs.MINT, mints.length);
-
     await processMintEvents(mints);
-
-    const lastMintCheckpoint = getLastMintCheckpoint({ mints, batchSize, latestBlockNumber });
-    if (lastMintCheckpoint) {
-      await updateMintCheckpoint(lastMintCheckpoint);
+    const lastEventCheckpont = await EventUtil.getLastEventCheckpoint(mints);
+    if (lastEventCheckpont) {
+      await updateMintCheckpoint(lastEventCheckpont);
     }
     done();
   } catch (err) {
@@ -33,23 +32,20 @@ agenda.define(jobs.MINT, async (job, done) => {
   }
 });
 
-async function getLatestBlockNumberFromSubgraph() {
-  const response = await axios.get(STATUS_API_URL);
-  const statusObject = response?.data?.data['indexingStatusForCurrentVersion'] || {};
-  const chains = statusObject.chains || [];
-  const firstObject = chains.pop();
-  return parseInt(firstObject?.latestBlock?.number, 10) || 0;
-}
-
 async function fetchMintCheckpoint() {
   const eventProcessed = await EventProcessor.findOne({});
   return eventProcessed ? eventProcessed.mint : 0;
 }
 
 async function fetchMintEvents(checkpoint, itemCount) {
+  const existingEventIds = await EventUtil.fetchAddedEventsID(EVENT_NAME);
   const response = await axios.post(API_URL, {
     query: `{
-      ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {
+      ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, 
+        where: {
+          blockNumber_gte : ${checkpoint},
+          id_not_in:[${existingEventIds.map(event => `"${event}"`).join(', ')}]
+         }) {
           id,
           portal,
           account,
@@ -84,14 +80,6 @@ async function processMintEvents(mints) {
   });
   const data = await Promise.all(allPromises);
   return data;
-}
-
-function getLastMintCheckpoint({ mints, batchSize, latestBlockNumber }) {
-  if (mints.length < batchSize) {
-    return latestBlockNumber;
-  }
-  const lastElem = (mints || []).pop();
-  return lastElem ? lastElem.blockNumber : null;
 }
 
 function updateMintCheckpoint(newCheckpoint) {
