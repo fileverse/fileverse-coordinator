@@ -59,7 +59,7 @@ async function fetchAddedCollaboratorEvents(checkpoint, itemCount) {
       ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, 
         where: {
           blockNumber_gte : ${checkpoint},
-          id_not_in:${fetchedEvents}
+          id_not_in:[${fetchedEvents.map(event => `"${event}"`).join(', ')}]
 
         }) {
           id,
