@@ -1,34 +1,33 @@
 const config = require("../../../../config");
+const constants = require("../../../constants");
+
 const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
+const fetchAddedEventsID = require("./fetchedEvents");
 
 const API_URL = config.SUBGRAPH_API;
 const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
 const EVENT_NAME = "mints";
-const BATCH_SIZE = 10;
+const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
 agenda.define(jobs.MINT, async (job, done) => {
+  let mints = [];
   try {
-    const latestBlockNumber = await getLatestBlockNumberFromSubgraph();
     const mintCheckpoint = await fetchMintCheckpoint();
     const batchSize = BATCH_SIZE;
-    const mints = await fetchMintEvents(mintCheckpoint, batchSize);
-
+    mints = await fetchMintEvents(mintCheckpoint, batchSize);
     console.log("Received entries", jobs.MINT, mints.length);
-
     await processMintEvents(mints);
-
-    const lastMintCheckpoint = getLastMintCheckpoint({ mints, batchSize, latestBlockNumber });
-    if (lastMintCheckpoint) {
-      await updateMintCheckpoint(lastMintCheckpoint);
-    }
     done();
   } catch (err) {
     console.error("Error in job", jobs.MINT, err);
     done(err);
   } finally {
+    if (mints.length > 0) {
+      await updateMintCheckpoint(mints[mints.length - 1].blockNumber);
+    }
     console.log("Job done", jobs.MINT);
   }
 });
@@ -47,9 +46,14 @@ async function fetchMintCheckpoint() {
 }
 
 async function fetchMintEvents(checkpoint, itemCount) {
+  const fetchedEvents = await fetchAddedEventsID(EVENT_NAME);
   const response = await axios.post(API_URL, {
     query: `{
-      ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {
+      ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, 
+        where: {
+          blockNumber_gte : ${checkpoint},
+          id_not_in:${fetchedEvents}
+         }) {
           id,
           portal,
           account,

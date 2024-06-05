@@ -1,5 +1,7 @@
+const constants = require("../../../constants");
 const config = require("../../../../config");
 const { EventProcessor, Event } = require("../../../infra/database/models");
+const fetchAddedEventsID = require("./fetchedEvents");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
@@ -8,15 +10,14 @@ const API_URL = config.SUBGRAPH_API;
 const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
 
 const EVENT_NAME = "addedCollaborators";
-const BATCH_SIZE = 10;
+const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
 agenda.define(jobs.ADDED_COLLABORATOR, async (job, done) => {
+  let addedCollaborators = [];
   try {
-    const latestBlockNumber = await getLatestBlockNumberFromSubgraph();
-    const addedCollaboratorCheckpoint =
-      await fetchAddedCollaboratorCheckpoint();
+    const addedCollaboratorCheckpoint = await fetchAddedCollaboratorCheckpoint();
     const batchSize = BATCH_SIZE;
-    const addedCollaborators = await fetchAddedCollaboratorEvents(
+    addedCollaborators = await fetchAddedCollaboratorEvents(
       addedCollaboratorCheckpoint,
       batchSize,
     );
@@ -26,16 +27,14 @@ agenda.define(jobs.ADDED_COLLABORATOR, async (job, done) => {
       addedCollaborators.length
     );
     await processAddedCollaboratorEvents(addedCollaborators);
-    const lastAddedCollaboratorCheckpoint =
-      getLastAddedCollaboratorCheckpoint({ addedCollaborators, batchSize, latestBlockNumber });
-    if (lastAddedCollaboratorCheckpoint) {
-      await updateAddedCollaboratorCheckpoint(lastAddedCollaboratorCheckpoint);
-    }
     done();
   } catch (err) {
     console.error("Error in job", jobs.ADDED_COLLABORATOR, err);
     done(err);
   } finally {
+    if (addedCollaborators.length > 0) {
+      await updateAddedCollaboratorCheckpoint(addedCollaborators[addedCollaborators.length - 1].blockNumber);
+    }
     console.log("Job done", jobs.ADDED_COLLABORATOR);
   }
 });
@@ -54,9 +53,15 @@ async function fetchAddedCollaboratorCheckpoint() {
 }
 
 async function fetchAddedCollaboratorEvents(checkpoint, itemCount) {
+  const fetchedEvents = await fetchAddedEventsID(EVENT_NAME);
   const response = await axios.post(API_URL, {
     query: `{
-      ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {
+      ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, 
+        where: {
+          blockNumber_gte : ${checkpoint},
+          id_not_in:${fetchedEvents}
+
+        }) {
           id,
           portalAddress,
           by,
