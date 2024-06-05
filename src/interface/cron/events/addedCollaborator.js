@@ -27,14 +27,14 @@ agenda.define(jobs.ADDED_COLLABORATOR, async (job, done) => {
       addedCollaborators.length
     );
     await processAddedCollaboratorEvents(addedCollaborators);
+    if (addedCollaborators.length > 0) {
+      await updateAddedCollaboratorCheckpoint(addedCollaborators[addedCollaborators.length - 1].blockNumber);
+    }
     done();
   } catch (err) {
     console.error("Error in job", jobs.ADDED_COLLABORATOR, err);
     done(err);
   } finally {
-    if (addedCollaborators.length > 0) {
-      await updateAddedCollaboratorCheckpoint(addedCollaborators[addedCollaborators.length - 1].blockNumber);
-    }
     console.log("Job done", jobs.ADDED_COLLABORATOR);
   }
 });
@@ -45,13 +45,13 @@ async function fetchAddedCollaboratorCheckpoint() {
 }
 
 async function fetchAddedCollaboratorEvents(checkpoint, itemCount) {
-  const fetchedEvents = await fetchAddedEventsID(EVENT_NAME);
+  const existingEventIds = await fetchAddedEventsID(EVENT_NAME);
   const response = await axios.post(API_URL, {
     query: `{
       ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, 
         where: {
           blockNumber_gte : ${checkpoint},
-          id_not_in:[${fetchedEvents.map(event => `"${event}"`).join(', ')}]
+          id_not_in:[${existingEventIds.map(event => `"${event}"`).join(', ')}]
 
         }) {
           id,

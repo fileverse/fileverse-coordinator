@@ -26,15 +26,14 @@ agenda.define(jobs.EDITED_FILE, async (job, done) => {
     );
     console.log("Received entries", jobs.EDITED_FILE, editedFiles.length);
     await processEditedFilesEvents(editedFiles);
-
+    if (editedFiles.length > 0) {
+      await updateEditedFilesCheckpoint(editedFiles[editedFiles.length - 1].blockNumber);
+    }
     done();
   } catch (err) {
     console.error("Error in job", jobs.EDITED_FILE, err);
     done(err);
   } finally {
-    if (editedFiles.length > 0) {
-      await updateEditedFilesCheckpoint(editedFiles[editedFiles.length - 1].blockNumber);
-    }
     console.log("Job done", jobs.EDITED_FILE);
   }
 });
@@ -46,13 +45,13 @@ async function fetchEditedFilesCheckpoint() {
 }
 
 async function fetchEditedFilesEvents(checkpoint, itemCount) {
-  const fetchedEvents = await fetchAddedEventsID(EVENT_NAME);
+  const existingEventIds = await fetchAddedEventsID(EVENT_NAME);
   const response = await axios.post(API_URL, {
     query: `{
       ${EVENT_NAME}(first: ${itemCount || 5
       }, orderDirection: asc, orderBy: blockNumber, where: { 
         blockNumber_gte : ${checkpoint},
-        id_not_in:[${fetchedEvents.map(event => `"${event}"`).join(', ')}]
+        id_not_in:[${existingEventIds.map(event => `"${event}"`).join(', ')}]
       }) {
         id,
         fileId,
