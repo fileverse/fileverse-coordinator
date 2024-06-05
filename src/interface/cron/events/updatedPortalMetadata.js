@@ -57,20 +57,21 @@ async function fetchUpdatedPortalMetadataCheckpoint() {
 
 async function fetchUpdatedPortalMetadataEvents(checkpoint, itemCount) {
   const fetchedEvents = await fetchAddedEventsID(EVENT_NAME);
-  const response = await axios.post(API_URL, {
-    query: `{
+  const query = `{
       ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, 
         where: {
           blockNumber_gte : ${checkpoint},
           id_not_in:[${fetchedEvents.map(event => `"${event}"`).join(', ')}]
-        ) {
+        }) {
           id
           portalAddress,
           blockNumber,
           metadataIPFSHash,
           by,
         }
-      }`,
+      }`;
+  const response = await axios.post(API_URL, {
+    query: query,
   });
   return response?.data?.data[EVENT_NAME] || [];
 }
