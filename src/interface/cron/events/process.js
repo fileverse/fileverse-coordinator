@@ -10,7 +10,7 @@ agenda.define(jobs.PROCESS, async (job, done) => {
   try {
     const checkpoints = await fetchCheckspoints();
     for (const checkpoint of checkpoints) {
-      const events = await fetchEvents(minCheckpoint, FetchEventCount);
+      const events = await fetchEvents(checkpoint, FetchEventCount);
       console.log("Received entries", jobs.PROCESS, events.length);
       await processStoredEvents(events);
     }
