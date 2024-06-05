@@ -5,10 +5,9 @@ const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
-const fetchAddedEventsID = require("./fetchedEvents");
+const fetchAddedEventsID = require("./utils");
 
 const API_URL = config.SUBGRAPH_API;
-const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
 const EVENT_NAME = "mints";
 const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
@@ -20,8 +19,9 @@ agenda.define(jobs.MINT, async (job, done) => {
     mints = await fetchMintEvents(mintCheckpoint, batchSize);
     console.log("Received entries", jobs.MINT, mints.length);
     await processMintEvents(mints);
-    if (mints.length > 0) {
-      await updateMintCheckpoint(mints[mints.length - 1].blockNumber);
+    const lastEventCheckpont = await EventUtil.getLastEventCheckpoint(mints);
+    if (lastEventCheckpont) {
+      await updateAddedCollaboratorCheckpoint(lastEventCheckpont);
     }
     done();
   } catch (err) {

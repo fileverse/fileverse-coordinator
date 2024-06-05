@@ -8,12 +8,10 @@ const FetchEventCount = constants.CRON.PROCESS_LIMIT;
 
 agenda.define(jobs.PROCESS, async (job, done) => {
   try {
-    const checkpoints = await fetchCheckspoints();
-    for (const checkpoint of checkpoints) {
-      const events = await fetchEvents(checkpoint, FetchEventCount);
-      console.log("Received entries", jobs.PROCESS, events.length);
-      await processStoredEvents(events);
-    }
+    const minCheckpoint = await fetchMinCheckpoint();
+    const events = await fetchEvents(minCheckpoint, FetchEventCount);
+    console.log("Received entries", jobs.PROCESS, events.length);
+    await processStoredEvents(events);
     done();
   } catch (err) {
     console.error("Error in job", jobs.MINT, err);
@@ -23,15 +21,15 @@ agenda.define(jobs.PROCESS, async (job, done) => {
   }
 });
 
-async function fetchCheckspoints() {
+async function fetchMinCheckpoint() {
   const eventProcessed = await EventProcessor.findOne({});
-  return [
+  return Math.min(
     eventProcessed.editedFiles,
     eventProcessed.addedFiles,
     eventProcessed.addedCollaborator,
     eventProcessed.removedCollaborator,
     eventProcessed.registeredCollaboratorKey
-  ];
+  );
 }
 
 async function fetchEvents(checkpoint, limit) {

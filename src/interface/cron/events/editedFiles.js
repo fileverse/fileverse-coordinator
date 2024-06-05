@@ -5,12 +5,10 @@ const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
-const fetchAddedEventsID = require("./fetchedEvents");
+const fetchAddedEventsID = require("./utils");
 
 
 const API_URL = config.SUBGRAPH_API;
-const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
-
 const EVENT_NAME = "editedFiles";
 const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
@@ -26,8 +24,9 @@ agenda.define(jobs.EDITED_FILE, async (job, done) => {
     );
     console.log("Received entries", jobs.EDITED_FILE, editedFiles.length);
     await processEditedFilesEvents(editedFiles);
-    if (editedFiles.length > 0) {
-      await updateEditedFilesCheckpoint(editedFiles[editedFiles.length - 1].blockNumber);
+    const lastEventCheckpont = await EventUtil.getLastEventCheckpoint(editedFiles);
+    if (lastEventCheckpont) {
+      await updateAddedCollaboratorCheckpoint(lastEventCheckpont);
     }
     done();
   } catch (err) {
