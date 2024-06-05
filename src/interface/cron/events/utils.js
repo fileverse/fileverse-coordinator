@@ -1,8 +1,10 @@
+const axios = require("axios");
 const { Event } = require("../../../infra/database/models");
+const config = require("../../../../config");
 const constants = require("../../../constants");
+
 const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
-const axios = require("axios");
 
 
 async function fetchAddedEventsID(name) {
