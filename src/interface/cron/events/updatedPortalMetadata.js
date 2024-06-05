@@ -29,7 +29,7 @@ agenda.define(jobs.UPDATED_PORTAL_METADATA, async (job, done) => {
     await processUpdatedPortalMetadataEvents(updatedPortalMetadatas);
     const lastEventCheckpont = await EventUtil.getLastEventCheckpoint(updatedPortalMetadatas);
     if (lastEventCheckpont) {
-      await updatedPortalMetadataCheckpoint(lastEventCheckpont);
+      await updateUpdatedPortalMetadataCheckpoint(lastEventCheckpont);
     }
     done();
   } catch (err) {
