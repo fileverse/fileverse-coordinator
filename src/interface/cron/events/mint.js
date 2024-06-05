@@ -21,7 +21,7 @@ agenda.define(jobs.MINT, async (job, done) => {
     await processMintEvents(mints);
     const lastEventCheckpont = await EventUtil.getLastEventCheckpoint(mints);
     if (lastEventCheckpont) {
-      await updateAddedCollaboratorCheckpoint(lastEventCheckpont);
+      await updateMintCheckpoint(lastEventCheckpont);
     }
     done();
   } catch (err) {

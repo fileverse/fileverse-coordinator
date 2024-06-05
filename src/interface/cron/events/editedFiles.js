@@ -26,7 +26,7 @@ agenda.define(jobs.EDITED_FILE, async (job, done) => {
     await processEditedFilesEvents(editedFiles);
     const lastEventCheckpont = await EventUtil.getLastEventCheckpoint(editedFiles);
     if (lastEventCheckpont) {
-      await updateAddedCollaboratorCheckpoint(lastEventCheckpont);
+      await updateEditedFilesCheckpoint(lastEventCheckpont);
     }
     done();
   } catch (err) {

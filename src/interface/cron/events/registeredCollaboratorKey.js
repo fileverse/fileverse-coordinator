@@ -28,7 +28,7 @@ agenda.define(jobs.REGISTERED_COLLABORATOR_KEY, async (job, done) => {
     await processRegisteredCollaboratorKeyEvents(registeredCollaboratorKey);
     const lastEventCheckpont = await EventUtil.getLastEventCheckpoint(registeredCollaboratorKey);
     if (lastEventCheckpont) {
-      await updateAddedCollaboratorCheckpoint(lastEventCheckpont);
+      await updateRegisteredCollaboratorKeyCheckpoint(lastEventCheckpont);
     }
     done();
   } catch (err) {
