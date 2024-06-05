@@ -82,14 +82,6 @@ async function processMintEvents(mints) {
   return data;
 }
 
-function getLastMintCheckpoint({ mints, batchSize, latestBlockNumber }) {
-  if (mints.length < batchSize) {
-    return latestBlockNumber;
-  }
-  const lastElem = (mints || []).pop();
-  return lastElem ? lastElem.blockNumber : null;
-}
-
 function updateMintCheckpoint(newCheckpoint) {
   if (!newCheckpoint || newCheckpoint < 0) return;
   return EventProcessor.updateOne(

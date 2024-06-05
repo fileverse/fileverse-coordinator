@@ -96,14 +96,6 @@ async function processUpdatedPortalMetadataEvents(updatedPortalMetadatas) {
   return data;
 }
 
-function getLastUpdatedPortalMetadataCheckpoint({ updatedPortalMetadatas, batchSize, latestBlockNumber }) {
-  if (updatedPortalMetadatas.length < batchSize) {
-    return latestBlockNumber;
-  }
-  const lastElem = (updatedPortalMetadatas || []).pop();
-  return lastElem ? lastElem.blockNumber : null;
-}
-
 function updateUpdatedPortalMetadataCheckpoint(newCheckpoint) {
   if (!newCheckpoint || newCheckpoint < 0) return;
   return EventProcessor.updateOne(

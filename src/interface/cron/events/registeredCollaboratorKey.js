@@ -98,14 +98,6 @@ async function processRegisteredCollaboratorKeyEvents(
   return data;
 }
 
-function getLastRegisteredCollaboratorKeyCheckpoint({ registeredCollaboratorKey, batchSize, latestBlockNumber }) {
-  if (registeredCollaboratorKey.length < batchSize) {
-    return latestBlockNumber;
-  }
-  const lastElem = (registeredCollaboratorKey || []).pop();
-  return lastElem ? lastElem.blockNumber : null;
-}
-
 function updateRegisteredCollaboratorKeyCheckpoint(newCheckpoint) {
   if (!newCheckpoint || newCheckpoint < 0) return;
   return EventProcessor.updateOne(
