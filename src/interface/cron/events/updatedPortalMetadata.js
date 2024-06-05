@@ -63,7 +63,7 @@ async function fetchUpdatedPortalMetadataEvents(checkpoint, itemCount) {
         where: {
           blockNumber_gte : ${checkpoint},
           id_not_in:[${fetchedEvents.map(event => `"${event}"`).join(', ')}]
-        ) {
+        }) {
           id
           portalAddress,
           blockNumber,
