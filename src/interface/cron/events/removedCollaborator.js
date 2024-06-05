@@ -28,7 +28,7 @@ agenda.define(jobs.REMOVED_COLLABORATOR, async (job, done) => {
     await processRemovedCollaboratorEvents(removedCollaborators);
     const lastEventCheckpont = await EventUtil.getLastEventCheckpoint(removedCollaborators);
     if (lastEventCheckpont) {
-      await updateAddedCollaboratorCheckpoint(lastEventCheckpont);
+      await updateRemovedCollaboratorCheckpoint(lastEventCheckpont);
     }
     done();
   } catch (err) {

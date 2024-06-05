@@ -23,7 +23,7 @@ agenda.define(jobs.ADDED_FILE, async (job, done) => {
     await processAddedFilesEvents(addedFiles);
     const lastEventCheckpont = await EventUtil.getLastEventCheckpoint(addedFiles);
     if (lastEventCheckpont) {
-      await updateAddedCollaboratorCheckpoint(lastEventCheckpont);
+      await updateAddedFilesCheckpoint(lastEventCheckpont);
     }
     done();
   } catch (err) {
