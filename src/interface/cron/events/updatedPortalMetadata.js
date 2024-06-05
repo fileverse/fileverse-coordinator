@@ -1,14 +1,13 @@
 const config = require("../../../../config");
 const constants = require("../../../constants");
 const { EventProcessor, Event } = require("../../../infra/database/models");
-const fetchAddedEventsID = require("./fetchedEvents");
+const fetchAddedEventsID = require("./utils");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
 const processEvent = require('./processEvent');
 
 const API_URL = config.SUBGRAPH_API;
-const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
 const EVENT_NAME = "updatedPortalDatas";
 const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
@@ -28,10 +27,9 @@ agenda.define(jobs.UPDATED_PORTAL_METADATA, async (job, done) => {
       updatedPortalMetadatas.length
     );
     await processUpdatedPortalMetadataEvents(updatedPortalMetadatas);
-    if (updatedPortalMetadatas.length > 0) {
-      await updateUpdatedPortalMetadataCheckpoint(
-        updatedPortalMetadatas[updatedPortalMetadatas.length - 1].blockNumber
-      );
+    const lastEventCheckpont = await EventUtil.getLastEventCheckpoint(updatedPortalMetadatas);
+    if (lastEventCheckpont) {
+      await updateAddedCollaboratorCheckpoint(lastEventCheckpont);
     }
     done();
   } catch (err) {

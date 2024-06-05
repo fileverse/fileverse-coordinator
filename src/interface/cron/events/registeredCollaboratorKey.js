@@ -1,14 +1,12 @@
 const config = require("../../../../config");
 const constants = require("../../../constants");
 const { EventProcessor, Event } = require("../../../infra/database/models");
-const fetchAddedEventsID = require("./fetchedEvents");
+const fetchAddedEventsID = require("./utils");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
 
 const API_URL = config.SUBGRAPH_API;
-const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
-
 const EVENT_NAME = "registeredCollaboratorKeys";
 const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
@@ -28,10 +26,9 @@ agenda.define(jobs.REGISTERED_COLLABORATOR_KEY, async (job, done) => {
       registeredCollaboratorKey.length
     );
     await processRegisteredCollaboratorKeyEvents(registeredCollaboratorKey);
-    if (registeredCollaboratorKey.length > 0) {
-      await updateRegisteredCollaboratorKeyCheckpoint(
-        registeredCollaboratorKey[registeredCollaboratorKey.length - 1].blockNumber
-      );
+    const lastEventCheckpont = await EventUtil.getLastEventCheckpoint(registeredCollaboratorKey);
+    if (lastEventCheckpont) {
+      await updateAddedCollaboratorCheckpoint(lastEventCheckpont);
     }
     done();
   } catch (err) {

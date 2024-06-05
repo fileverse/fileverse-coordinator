@@ -1,13 +1,12 @@
 const config = require("../../../../config");
 const constants = require("../../../constants");
 const { EventProcessor, Event } = require("../../../infra/database/models");
-const fetchAddedEventsID = require("./fetchedEvents");
+const fetchAddedEventsID = require("./utils");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
 
 const API_URL = config.SUBGRAPH_API;
-const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
 const EVENT_NAME = "removedCollaborators";
 const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
@@ -26,13 +25,11 @@ agenda.define(jobs.REMOVED_COLLABORATOR, async (job, done) => {
       jobs.REMOVED_COLLABORATOR,
       removedCollaborators.length
     );
-    if (removedCollaborators.length > 0) {
-      await updateRemovedCollaboratorCheckpoint(
-        removedCollaborators[removedCollaborators.length - 1].blockNumber
-      );
-    }
     await processRemovedCollaboratorEvents(removedCollaborators);
-
+    const lastEventCheckpont = await EventUtil.getLastEventCheckpoint(removedCollaborators);
+    if (lastEventCheckpont) {
+      await updateAddedCollaboratorCheckpoint(lastEventCheckpont);
+    }
     done();
   } catch (err) {
     console.error("Error in job", jobs.REMOVED_COLLABORATOR, err);
