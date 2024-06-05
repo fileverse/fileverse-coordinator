@@ -1,7 +1,7 @@
 const config = require("../../../../config");
 const constants = require("../../../constants");
 const { EventProcessor, Event } = require("../../../infra/database/models");
-const fetchAddedEventsID = require("./utils");
+const EventUtil = require("./utils");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
@@ -46,7 +46,7 @@ async function fetchUpdatedPortalMetadataCheckpoint() {
 }
 
 async function fetchUpdatedPortalMetadataEvents(checkpoint, itemCount) {
-  const existingEventIds = await fetchAddedEventsID(EVENT_NAME);
+  const existingEventIds = await EventUtil.fetchAddedEventsID(EVENT_NAME);
   const response = await axios.post(API_URL, {
     query: `{
       ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, 

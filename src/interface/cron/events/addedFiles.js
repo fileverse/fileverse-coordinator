@@ -4,7 +4,7 @@ const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
-const fetchAddedEventsID = require("./utils");
+const EventUtil = require("./utils");
 
 const API_URL = config.SUBGRAPH_API;
 const EVENT_NAME = "addedFiles";
@@ -40,7 +40,7 @@ async function fetchAddedFilesCheckpoint() {
 }
 
 async function fetchAddedFilesEvents(checkpoint, itemCount) {
-  const existingEventIds = await fetchAddedEventsID(EVENT_NAME);
+  const existingEventIds = await EventUtil.fetchAddedEventsID(EVENT_NAME);
   const response = await axios.post(API_URL, {
     query: `{
       ${EVENT_NAME}(first: ${itemCount || 5
