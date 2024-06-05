@@ -1,5 +1,7 @@
 const config = require("../../../../config");
+const constants = require("../../../constants");
 const { EventProcessor, Event } = require("../../../infra/database/models");
+const fetchAddedEventsID = require("./fetchedEvents");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
@@ -7,15 +9,15 @@ const axios = require("axios");
 const API_URL = config.SUBGRAPH_API;
 const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
 const EVENT_NAME = "removedCollaborators";
-const BATCH_SIZE = 10;
+const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
 agenda.define(jobs.REMOVED_COLLABORATOR, async (job, done) => {
+  let removedCollaborators = [];
   try {
-    const latestBlockNumber = await getLatestBlockNumberFromSubgraph();
     const removedCollaboratorCheckpoint =
       await fetchRemovedCollaboratorCheckpoint();
     const batchSize = BATCH_SIZE;
-    const removedCollaborators = await fetchRemovedCollaboratorEvents(
+    removedCollaborators = await fetchRemovedCollaboratorEvents(
       removedCollaboratorCheckpoint,
       batchSize,
     );
@@ -25,18 +27,17 @@ agenda.define(jobs.REMOVED_COLLABORATOR, async (job, done) => {
       removedCollaborators.length
     );
     await processRemovedCollaboratorEvents(removedCollaborators);
-    const lastRemovedCollaboratorCheckpoint =
-      getLastRemovedCollaboratorCheckpoint({ removedCollaborators, batchSize, latestBlockNumber });
-    if (lastRemovedCollaboratorCheckpoint) {
-      await updateRemovedCollaboratorCheckpoint(
-        lastRemovedCollaboratorCheckpoint
-      );
-    }
+
     done();
   } catch (err) {
     console.error("Error in job", jobs.REMOVED_COLLABORATOR, err);
     done(err);
   } finally {
+    if (removedCollaborators.length > 0) {
+      await updateRemovedCollaboratorCheckpoint(
+        removedCollaborators[removedCollaborators.length - 1].blockNumber
+      );
+    }
     console.log("Job done", jobs.REMOVED_COLLABORATOR);
   }
 });
@@ -55,9 +56,14 @@ async function fetchRemovedCollaboratorCheckpoint() {
 }
 
 async function fetchRemovedCollaboratorEvents(checkpoint, itemCount) {
+  const fetchedEvents = await fetchAddedEventsID(EVENT_NAME);
   const response = await axios.post(API_URL, {
     query: `{
-      ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {
+      ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, 
+        where: {
+          blockNumber_gte : ${checkpoint},
+          id_not_in:${fetchedEvents}
+        ) {
           id
           portalAddress,
           by,

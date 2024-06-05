@@ -2,8 +2,9 @@ const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const processEvent = require('./processEvent');
-const FetchEventCount = 10;
-const { EVENT_PROCESS_MAX_RETRIES } = require("../../../constants");
+const constants = require("../../../constants");
+
+const FetchEventCount = constants.CRON.PROCESS_LIMIT;
 
 agenda.define(jobs.PROCESS, async (job, done) => {
   try {
@@ -35,7 +36,7 @@ async function fetchEvents(checkpoint, limit) {
   const events = await Event.find({
     blockNumber: { $lte: checkpoint },
     processed: false,
-    retries: { $lt: EVENT_PROCESS_MAX_RETRIES },
+    retries: { $lt: constants.EVENT_PROCESS_MAX_RETRIES },
   }).limit(limit);
   return events;
 }

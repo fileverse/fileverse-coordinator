@@ -1,5 +1,7 @@
 const config = require("../../../../config");
+const constants = require("../../../constants");
 const { EventProcessor, Event } = require("../../../infra/database/models");
+const fetchAddedEventsID = require("./fetchedEvents");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
@@ -8,15 +10,14 @@ const API_URL = config.SUBGRAPH_API;
 const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
 
 const EVENT_NAME = "registeredCollaboratorKeys";
-const BATCH_SIZE = 10;
+const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
 agenda.define(jobs.REGISTERED_COLLABORATOR_KEY, async (job, done) => {
+  let registeredCollaboratorKey = [];
   try {
-    const latestBlockNumber = await getLatestBlockNumberFromSubgraph();
-    const registeredCollaboratorKeyCheckpoint =
-      await fetchRegisteredCollaboratorKeyCheckpoint();
+    const registeredCollaboratorKeyCheckpoint = await fetchRegisteredCollaboratorKeyCheckpoint();
     const batchSize = BATCH_SIZE;
-    const registeredCollaboratorKey =
+    registeredCollaboratorKey =
       await fetchRegisteredCollaboratorKeyEvents(
         registeredCollaboratorKeyCheckpoint,
         batchSize,
@@ -27,18 +28,16 @@ agenda.define(jobs.REGISTERED_COLLABORATOR_KEY, async (job, done) => {
       registeredCollaboratorKey.length
     );
     await processRegisteredCollaboratorKeyEvents(registeredCollaboratorKey);
-    const lastRegisteredCollaboratorKeyCheckpoint =
-      getLastRegisteredCollaboratorKeyCheckpoint({ registeredCollaboratorKey, batchSize, latestBlockNumber });
-    if (lastRegisteredCollaboratorKeyCheckpoint) {
-      await updateRegisteredCollaboratorKeyCheckpoint(
-        lastRegisteredCollaboratorKeyCheckpoint
-      );
-    }
     done();
   } catch (err) {
     console.error("Error in job", jobs.REGISTERED_COLLABORATOR_KEY, err);
     done(err);
   } finally {
+    if (registeredCollaboratorKey.length > 0) {
+      await updateRegisteredCollaboratorKeyCheckpoint(
+        registeredCollaboratorKey[registeredCollaboratorKey.length - 1].blockNumber
+      );
+    }
     console.log("Job done", jobs.REGISTERED_COLLABORATOR_KEY);
   }
 });
@@ -57,9 +56,14 @@ async function fetchRegisteredCollaboratorKeyCheckpoint() {
 }
 
 async function fetchRegisteredCollaboratorKeyEvents(checkpoint, itemCount) {
+  const fetchedEvents = await fetchAddedEventsID(EVENT_NAME);
   const response = await axios.post(API_URL, {
     query: `{
-      ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {\
+      ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber,
+        where: {
+          blockNumber_gte : ${checkpoint},
+          id_not_in:${fetchedEvents}
+        }) {\
           id,
           portalAddress,
           blockNumber,

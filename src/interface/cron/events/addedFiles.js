@@ -1,14 +1,16 @@
 const config = require("../../../../config");
+const constants = require("../../../constants");
 const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
+const fetchAddedEventsID = require("./fetchedEvents");
 
 const API_URL = config.SUBGRAPH_API;
 const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
 
 const EVENT_NAME = "addedFiles";
-const BATCH_SIZE = 10;
+const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
 agenda.define(jobs.ADDED_FILE, async (job, done) => {
   let addedFiles = [];
@@ -25,15 +27,6 @@ agenda.define(jobs.ADDED_FILE, async (job, done) => {
     console.error("Error in job", jobs.ADDED_FILE, err);
     done(err);
   } finally {
-    // const latestBlockNumber = await getLatestBlockNumberFromSubgraph();
-    // const lastAddedFilesCheckpoint = getLastAddedFilesCheckpoint({
-    //   addedFiles,
-    //   batchSize,
-    //   latestBlockNumber,
-    // });
-    // if (lastAddedFilesCheckpoint) {
-    //   await updateAddedFilesCheckpoint(lastAddedFilesCheckpoint);
-    // }
     if (addedFiles.length > 0) {
       await updateAddedFilesCheckpoint(addedFiles[addedFiles.length - 1].blockNumber);
     }
@@ -57,10 +50,15 @@ async function fetchAddedFilesCheckpoint() {
 }
 
 async function fetchAddedFilesEvents(checkpoint, itemCount) {
+  const fetchedEvents = await fetchAddedEventsID(EVENT_NAME);
   const response = await axios.post(API_URL, {
     query: `{
       ${EVENT_NAME}(first: ${itemCount || 5
-      }, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gt : ${checkpoint} }) {
+      }, orderDirection: asc, orderBy: blockNumber, 
+      where: {
+        blockNumber_gte : ${checkpoint},
+        id_not_in:${fetchedEvents}
+      }) {
         id,
         fileId,
         fileType,
