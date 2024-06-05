@@ -57,7 +57,8 @@ async function fetchUpdatedPortalMetadataCheckpoint() {
 
 async function fetchUpdatedPortalMetadataEvents(checkpoint, itemCount) {
   const fetchedEvents = await fetchAddedEventsID(EVENT_NAME);
-  const query = `{
+  const response = await axios.post(API_URL, {
+    query: `{
       ${EVENT_NAME}(first: ${itemCount || 5}, orderDirection: asc, orderBy: blockNumber, 
         where: {
           blockNumber_gte : ${checkpoint},
@@ -69,9 +70,7 @@ async function fetchUpdatedPortalMetadataEvents(checkpoint, itemCount) {
           metadataIPFSHash,
           by,
         }
-      }`;
-  const response = await axios.post(API_URL, {
-    query: query,
+      }`,
   });
   return response?.data?.data[EVENT_NAME] || [];
 }
