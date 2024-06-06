@@ -14,10 +14,10 @@ agenda.define(jobs.PROCESS, async (job, done) => {
     await processStoredEvents(events);
     done();
   } catch (err) {
-    console.error("Error in job", jobs.MINT, err);
+    console.error("Error in job", jobs.PROCESS, err);
     done(err);
   } finally {
-    console.log("Job done", jobs.MINT);
+    console.log("Job done", jobs.PROCESS);
   }
 });
 
