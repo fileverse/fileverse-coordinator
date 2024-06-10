@@ -1,3 +1,4 @@
+const Logger = require('../../../domain/logger');
 const config = require("../../../../config");
 const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
@@ -35,6 +36,7 @@ agenda.define(jobs.UPDATED_PORTAL_METADATA, async (job, done) => {
     }
     done();
   } catch (err) {
+    await Logger.alert(jobs.UPDATED_PORTAL_METADATA + "::" + err.message, err.stack);
     console.error("Error in job", jobs.UPDATED_PORTAL_METADATA, err);
     done(err);
   } finally {

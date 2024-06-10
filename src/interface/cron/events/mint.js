@@ -1,3 +1,4 @@
+const Logger = require('../../../domain/logger');
 const config = require("../../../../config");
 const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
@@ -26,6 +27,7 @@ agenda.define(jobs.MINT, async (job, done) => {
     }
     done();
   } catch (err) {
+    await Logger.alert(jobs.MINT + "::" + err.message, err.stack);
     console.error("Error in job", jobs.MINT, err);
     done(err);
   } finally {

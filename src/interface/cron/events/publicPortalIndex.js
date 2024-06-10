@@ -1,3 +1,4 @@
+const Logger = require('../../../domain/logger');
 const config = require("../../../../config");
 const agenda = require("../index");
 const jobs = require("../jobs");
@@ -31,6 +32,7 @@ agenda.define(jobs.PORTAL_INDEX, async (job, done) => {
 
     done();
   } catch (err) {
+    await Logger.alert(jobs.PORTAL_INDEX + "::" + err.message, err.stack);
     console.error("Error in job", jobs.PORTAL_INDEX, err);
     done(err);
   } finally {

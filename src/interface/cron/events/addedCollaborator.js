@@ -1,3 +1,4 @@
+const Logger = require('../../../domain/logger');
 const config = require("../../../../config");
 const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
@@ -33,6 +34,7 @@ agenda.define(jobs.ADDED_COLLABORATOR, async (job, done) => {
     }
     done();
   } catch (err) {
+    await Logger.alert(jobs.ADDED_COLLABORATOR + "::" + err.message, err.stack);
     console.error("Error in job", jobs.ADDED_COLLABORATOR, err);
     done(err);
   } finally {

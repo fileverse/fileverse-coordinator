@@ -1,3 +1,4 @@
+const Logger = require('../../../domain/logger');
 const config = require("../../../../config");
 const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
@@ -31,6 +32,7 @@ agenda.define(jobs.EDITED_FILE, async (job, done) => {
     }
     done();
   } catch (err) {
+    await Logger.alert(jobs.EDITED_FILE + "::" + err.message, err.stack);
     console.error("Error in job", jobs.EDITED_FILE, err);
     done(err);
   } finally {
@@ -55,9 +57,8 @@ async function fetchEditedFilesCheckpoint() {
 async function fetchEditedFilesEvents(checkpoint, itemCount) {
   const response = await axios.post(API_URL, {
     query: `{
-      ${EVENT_NAME}(first: ${
-      itemCount || 5
-    }, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {
+      ${EVENT_NAME}(first: ${itemCount || 5
+      }, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {
         id,
         fileId,
         fileType,

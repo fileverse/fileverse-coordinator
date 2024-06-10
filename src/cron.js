@@ -1,5 +1,6 @@
 const agenda = require('./interface/cron');
 const jobs = require('./interface/cron/jobs');
+const Logger = require('./domain/logger');
 
 async function graceful() {
   await agenda.stop();
@@ -30,6 +31,7 @@ async function graceful() {
     await agenda.every('10 seconds', jobs.PROCESS);
     await agenda.every('10 seconds', jobs.PORTAL_INDEX);
   } catch (err) {
+    await Logger.alert(err.message, err.stack);
     console.log(err.stack);
     await graceful();
   }
