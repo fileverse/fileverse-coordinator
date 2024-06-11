@@ -31,7 +31,7 @@ agenda.define(jobs.PORTAL_INDEX, async (job, done) => {
 
     done();
   } catch (err) {
-    console.error("Error in job", jobs.PORTAL_INDEX, err);
+    console.error("Error in job", jobs.PORTAL_INDEX, err.message);
     done(err);
   } finally {
     console.log("Job done", jobs.PORTAL_INDEX);

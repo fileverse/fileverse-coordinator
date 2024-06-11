@@ -32,7 +32,7 @@ agenda.define(jobs.REGISTERED_COLLABORATOR_KEY, async (job, done) => {
     }
     done();
   } catch (err) {
-    console.error("Error in job", jobs.REGISTERED_COLLABORATOR_KEY, err);
+    console.error("Error in job", jobs.REGISTERED_COLLABORATOR_KEY, err.message);
     done(err);
   } finally {
     console.log("Job done", jobs.REGISTERED_COLLABORATOR_KEY);
