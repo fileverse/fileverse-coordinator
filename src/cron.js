@@ -21,7 +21,9 @@ async function graceful() {
     require('./interface/cron/events/process');
     require('./interface/cron/events/publicPortalIndex');
 
-    await agenda.every('0,20,40 * * ? * * *', jobs.ADDED_FILE);
+    await agenda.every('0 * * ? * * *', jobs.ADDED_FILE);
+    await agenda.every('20 * * ? * * *', jobs.ADDED_FILE);
+    await agenda.every('40 * * ? * * *', jobs.ADDED_FILE);
     await agenda.every('2,22,42 * * ? * * *', jobs.EDITED_FILE);
     await agenda.every('4,24,44 * * ? * * *', jobs.ADDED_COLLABORATOR);
     await agenda.every('6,26,46 * * ? * * *', jobs.REGISTERED_COLLABORATOR_KEY);
