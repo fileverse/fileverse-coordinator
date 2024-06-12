@@ -43,7 +43,6 @@ let verify = (req, res, next) => {
               ],
             })
             .then((result) => {
-              console.log("result of the request verifications", result);
               if (result.ok) {
                 req.isAuthenticated = true;
               }

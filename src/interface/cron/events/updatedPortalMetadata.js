@@ -35,7 +35,7 @@ agenda.define(jobs.UPDATED_PORTAL_METADATA, async (job, done) => {
     done();
   } catch (err) {
     await Reporter().alert(jobs.UPDATED_PORTAL_METADATA + "::" + err.message, err.stack);
-    console.error("Error in job", jobs.UPDATED_PORTAL_METADATA, err);
+    console.error("Error in job", jobs.UPDATED_PORTAL_METADATA, err.message);
     done(err);
   } finally {
     console.log("Job done", jobs.UPDATED_PORTAL_METADATA);

@@ -32,7 +32,7 @@ agenda.define(jobs.EDITED_FILE, async (job, done) => {
     done();
   } catch (err) {
     await Reporter().alert(jobs.EDITED_FILE + "::" + err.message, err.stack);
-    console.error("Error in job", jobs.EDITED_FILE, err);
+    console.error("Error in job", jobs.EDITED_FILE, err.message);
     done(err);
   } finally {
     console.log("Job done", jobs.EDITED_FILE);

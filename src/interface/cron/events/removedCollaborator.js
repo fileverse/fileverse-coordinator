@@ -34,7 +34,7 @@ agenda.define(jobs.REMOVED_COLLABORATOR, async (job, done) => {
     done();
   } catch (err) {
     await Reporter().alert(jobs.REMOVED_COLLABORATOR + "::" + err.message, err.stack);
-    console.error("Error in job", jobs.REMOVED_COLLABORATOR, err);
+    console.error("Error in job", jobs.REMOVED_COLLABORATOR, err.message);
     done(err);
   } finally {
     console.log("Job done", jobs.REMOVED_COLLABORATOR);
