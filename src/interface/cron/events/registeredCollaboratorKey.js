@@ -1,4 +1,4 @@
-const Logger = require('../../../domain/logger');
+const Reporter = require('../../../domain/reporter');
 const config = require("../../../../config");
 const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
@@ -37,7 +37,7 @@ agenda.define(jobs.REGISTERED_COLLABORATOR_KEY, async (job, done) => {
     }
     done();
   } catch (err) {
-    await Logger.alert(jobs.REGISTERED_COLLABORATOR_KEY + "::" + err.message, err.stack);
+    await Reporter().alert(jobs.REGISTERED_COLLABORATOR_KEY + "::" + err.message, err.stack);
     console.error("Error in job", jobs.REGISTERED_COLLABORATOR_KEY, err);
     done(err);
   } finally {

@@ -4,7 +4,7 @@ const webhookUrl = process.env.SLACK_WEBHOOK_URL;
 const channel = process.env.SLACK_CHANNEL;
 const environment = process.env.DEPLOYMENT;
 
-const alert = async (error, detailedLogs) => {
+async function alert(error, detailedLogs) {
     if (!webhookUrl || !channel || !environment) {
         throw new Error('Missing required environment variables');
     }
@@ -18,4 +18,4 @@ const alert = async (error, detailedLogs) => {
     await axios.post(webhookUrl, message);
 };
 
-module.exports = alert;
+module.exports = { alert };

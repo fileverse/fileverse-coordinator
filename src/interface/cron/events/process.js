@@ -1,4 +1,4 @@
-const Logger = require('../../../domain/logger');
+const Reporter = require('../../../domain/reporter');
 const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
 const jobs = require("../jobs");
@@ -14,7 +14,7 @@ agenda.define(jobs.PROCESS, async (job, done) => {
     await processStoredEvents(events);
     done();
   } catch (err) {
-    await Logger.alert(jobs.PROCESS + "::" + err.message, err.stack);
+    await Reporter().alert(jobs.PROCESS + "::" + err.message, err.stack);
     console.error("Error in job", jobs.PROCESS, err);
     done(err);
   } finally {

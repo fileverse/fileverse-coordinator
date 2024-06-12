@@ -1,7 +1,8 @@
-const Logger = require('../../../domain/logger');
+const Reporter = require('../../../domain/reporter');
 const config = require("../../../../config");
 const agenda = require("../index");
 const jobs = require("../jobs");
+const axios = require("axios");
 
 const xApiKey = config.STORAGE_SECRET_KEY ? config.STORAGE_SECRET_KEY : "";
 const storageEndpoint = config.STORAGE_ENDPOINT
@@ -21,18 +22,11 @@ agenda.define(jobs.PORTAL_INDEX, async (job, done) => {
   };
 
   try {
-    fetch(url, requestOptions)
-      .then((response) => response.text())
-      .then((result) => {
-        console.log(result);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-
+    let response = await fetch(url, requestOptions);
+    console.log(response);
     done();
   } catch (err) {
-    await Logger.alert(jobs.PORTAL_INDEX + "::" + err.message, err.stack);
+    await Reporter().alert(jobs.PORTAL_INDEX + "::" + err.message, err.stack);
     console.error("Error in job", jobs.PORTAL_INDEX, err);
     done(err);
   } finally {
