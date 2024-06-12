@@ -27,7 +27,7 @@ agenda.define(jobs.MINT, async (job, done) => {
     done();
   } catch (err) {
     await Reporter().alert(jobs.MINT + "::" + err.message, err.stack);
-    console.error("Error in job", jobs.MINT, err);
+    console.error("Error in job", jobs.MINT, err.message);
     done(err);
   } finally {
     console.log("Job done", jobs.MINT);

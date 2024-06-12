@@ -16,7 +16,7 @@ agenda.define(jobs.PROCESS, async (job, done) => {
     done();
   } catch (err) {
     await Reporter().alert(jobs.PROCESS + "::" + err.message, err.stack);
-    console.error("Error in job", jobs.PROCESS, err);
+    console.error("Error in job", jobs.PROCESS, err.message);
     done(err);
   } finally {
     console.log("Job done", jobs.PROCESS);

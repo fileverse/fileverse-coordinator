@@ -29,7 +29,7 @@ agenda.define(jobs.ADDED_FILE, async (job, done) => {
     done();
   } catch (err) {
     await Reporter().alert(jobs.ADDED_FILE + "::" + err.message, err.stack);
-    console.error("Error in job", jobs.ADDED_FILE, err);
+    console.error("Error in job", jobs.ADDED_FILE, err.message);
     done(err);
   } finally {
     console.log("Job done", jobs.ADDED_FILE);
