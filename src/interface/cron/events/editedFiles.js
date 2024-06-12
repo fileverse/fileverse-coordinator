@@ -1,34 +1,33 @@
 const Reporter = require('../../../domain/reporter');
 const config = require("../../../../config");
+const constants = require("../../../constants");
+
 const { EventProcessor, Event } = require("../../../infra/database/models");
 const agenda = require("../index");
 const jobs = require("../jobs");
 const axios = require("axios");
+const EventUtil = require("./utils");
+
 
 const API_URL = config.SUBGRAPH_API;
-const STATUS_API_URL = config.SUBGRAPH_STATUS_API;
-
 const EVENT_NAME = "editedFiles";
-const BATCH_SIZE = 10;
+const BATCH_SIZE = constants.CRON.BATCH_SIZE;
+
 
 agenda.define(jobs.EDITED_FILE, async (job, done) => {
+  let editedFiles = [];
   try {
-    const latestBlockNumber = await getLatestBlockNumberFromSubgraph();
     const editedFilesCheckpoint = await fetchEditedFilesCheckpoint();
     const batchSize = BATCH_SIZE;
-    const editedFiles = await fetchEditedFilesEvents(
+    editedFiles = await fetchEditedFilesEvents(
       editedFilesCheckpoint,
       batchSize
     );
     console.log("Received entries", jobs.EDITED_FILE, editedFiles.length);
     await processEditedFilesEvents(editedFiles);
-    const lastEditedFilesCheckpoint = getLastEditedFilesCheckpoint({
-      editedFiles,
-      batchSize,
-      latestBlockNumber,
-    });
-    if (lastEditedFilesCheckpoint) {
-      await updateEditedFilesCheckpoint(lastEditedFilesCheckpoint);
+    const lastEventCheckpont = await EventUtil.getLastEventCheckpoint(editedFiles);
+    if (lastEventCheckpont) {
+      await updateEditedFilesCheckpoint(lastEventCheckpont);
     }
     done();
   } catch (err) {
@@ -40,14 +39,6 @@ agenda.define(jobs.EDITED_FILE, async (job, done) => {
   }
 });
 
-async function getLatestBlockNumberFromSubgraph() {
-  const response = await axios.get(STATUS_API_URL);
-  const statusObject =
-    response?.data?.data["indexingStatusForCurrentVersion"] || {};
-  const chains = statusObject.chains || [];
-  const firstObject = chains.pop();
-  return parseInt(firstObject?.latestBlock?.number, 10) || 0;
-}
 
 async function fetchEditedFilesCheckpoint() {
   const eventProcessed = await EventProcessor.findOne({});
@@ -55,10 +46,14 @@ async function fetchEditedFilesCheckpoint() {
 }
 
 async function fetchEditedFilesEvents(checkpoint, itemCount) {
+  const existingEventIds = await EventUtil.fetchAddedEventsID(EVENT_NAME);
   const response = await axios.post(API_URL, {
     query: `{
       ${EVENT_NAME}(first: ${itemCount || 5
-      }, orderDirection: asc, orderBy: blockNumber, where: { blockNumber_gte : ${checkpoint} }) {
+      }, orderDirection: asc, orderBy: blockNumber, where: { 
+        blockNumber_gte : ${checkpoint},
+        id_not_in:[${existingEventIds.map(event => `"${event}"`).join(', ')}]
+      }) {
         id,
         fileId,
         fileType,
@@ -98,18 +93,6 @@ async function processEditedFilesEvents(editedFiles) {
   });
   const data = await Promise.all(allPromises);
   return data;
-}
-
-function getLastEditedFilesCheckpoint({
-  editedFiles,
-  batchSize,
-  latestBlockNumber,
-}) {
-  if (editedFiles.length < batchSize) {
-    return latestBlockNumber;
-  }
-  const lastElem = (editedFiles || []).pop();
-  return lastElem ? lastElem.blockNumber : null;
 }
 
 function updateEditedFilesCheckpoint(newCheckpoint) {
