@@ -1,4 +1,5 @@
 const Reporter = require('../../../domain/reporter');
+const constants = require("../../../constants");
 const config = require("../../../../config");
 const { EventProcessor, Event } = require("../../../infra/database/models");
 const EventUtil = require("./utils");
