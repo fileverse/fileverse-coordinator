@@ -1,4 +1,4 @@
-const constants = require("../../../constants");
+const Reporter = require('../../../domain/reporter');
 const config = require("../../../../config");
 const { EventProcessor, Event } = require("../../../infra/database/models");
 const EventUtil = require("./utils");
@@ -30,7 +30,8 @@ agenda.define(jobs.ADDED_COLLABORATOR, async (job, done) => {
     }
     done();
   } catch (err) {
-    console.error("Error in job", jobs.ADDED_COLLABORATOR, err.message);
+    await Reporter().alert(jobs.ADDED_COLLABORATOR + "::" + err.message, err.stack);
+    console.error("Error in job", jobs.ADDED_COLLABORATOR, err);
     done(err);
   } finally {
     console.log("Job done", jobs.ADDED_COLLABORATOR);

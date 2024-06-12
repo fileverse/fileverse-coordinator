@@ -1,3 +1,4 @@
+const Reporter = require('../../../domain/reporter');
 const config = require("../../../../config");
 const constants = require("../../../constants");
 const { EventProcessor, Event } = require("../../../infra/database/models");
@@ -27,7 +28,8 @@ agenda.define(jobs.ADDED_FILE, async (job, done) => {
     }
     done();
   } catch (err) {
-    console.error("Error in job", jobs.ADDED_FILE, err.message);
+    await Reporter().alert(jobs.ADDED_FILE + "::" + err.message, err.stack);
+    console.error("Error in job", jobs.ADDED_FILE, err);
     done(err);
   } finally {
     console.log("Job done", jobs.ADDED_FILE);

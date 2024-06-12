@@ -1,3 +1,4 @@
+const Reporter = require('../../../domain/reporter');
 const config = require("../../../../config");
 const constants = require("../../../constants");
 const { EventProcessor, Event } = require("../../../infra/database/models");
@@ -33,7 +34,8 @@ agenda.define(jobs.UPDATED_PORTAL_METADATA, async (job, done) => {
     }
     done();
   } catch (err) {
-    console.error("Error in job", jobs.UPDATED_PORTAL_METADATA, err.message);
+    await Reporter().alert(jobs.UPDATED_PORTAL_METADATA + "::" + err.message, err.stack);
+    console.error("Error in job", jobs.UPDATED_PORTAL_METADATA, err);
     done(err);
   } finally {
     console.log("Job done", jobs.UPDATED_PORTAL_METADATA);
