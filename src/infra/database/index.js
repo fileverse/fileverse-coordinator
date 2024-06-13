@@ -7,7 +7,7 @@ const logger = require('../logger');
 const dbURI = config.MONGOURI || 'mongodb://localhost/boilerplate_graphql';
 
 // Create the database connection
-mongoose.connect(dbURI, (err, client) => {
+mongoose.connect(dbURI, (err) => {
   if (err) {
     logger.info('DB Error: ', err);
     throw err;
@@ -15,27 +15,6 @@ mongoose.connect(dbURI, (err, client) => {
     logger.info(dbURI);
     logger.info('MongoDB Connected');
   }
-
-  const collection = client.db.collection('agendaJobs');
-  collection.updateMany(
-    {
-      lockedAt: { $exists: true },
-      lastFinishedAt: { $exists: false }
-    },
-    {
-      $unset: {
-        lockedAt: undefined,
-        lastModifiedBy: undefined,
-        lastRunAt: undefined
-      },
-      $set: {
-        nextRunAt: new Date()
-
-      }
-    },
-  ).then((x) => {
-    console.log(x)
-  });
 });
 
 // CONNECTION EVENTS
