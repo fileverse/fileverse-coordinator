@@ -26,9 +26,9 @@ agenda.define(jobs.PORTAL_INDEX, async (job, done) => {
     if (response.status !== 200) {
       throw new Error("Failed to trigger portal index");
     }
-    await Reporter().alert(jobs.PORTAL_INDEX + "::" + err.message, err.stack);
     done();
   } catch (err) {
+    await Reporter().alert(jobs.PORTAL_INDEX + "::" + err.message, err.stack);
     console.error("Error in job", jobs.PORTAL_INDEX, err.message);
     done(err);
   } finally {

@@ -29,9 +29,9 @@ agenda.define(jobs.EDITED_FILE, async (job, done) => {
     if (lastEventCheckpont) {
       await updateEditedFilesCheckpoint(lastEventCheckpont);
     }
-    await Reporter().alert(jobs.EDITED_FILE + "::" + err.message, err.stack);
     done();
   } catch (err) {
+    await Reporter().alert(jobs.EDITED_FILE + "::" + err.message, err.stack);
     console.error("Error in job", jobs.EDITED_FILE, err.message);
     done(err);
   } finally {

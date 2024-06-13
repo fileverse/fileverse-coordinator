@@ -32,9 +32,9 @@ agenda.define(jobs.UPDATED_PORTAL_METADATA, async (job, done) => {
     if (lastEventCheckpont) {
       await updateUpdatedPortalMetadataCheckpoint(lastEventCheckpont);
     }
-    await Reporter().alert(jobs.UPDATED_PORTAL_METADATA + "::" + err.message, err.stack);
     done();
   } catch (err) {
+    await Reporter().alert(jobs.UPDATED_PORTAL_METADATA + "::" + err.message, err.stack);
     console.error("Error in job", jobs.UPDATED_PORTAL_METADATA, err.message);
     done(err);
   } finally {
