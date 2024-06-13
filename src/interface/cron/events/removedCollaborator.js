@@ -32,9 +32,9 @@ agenda.define(jobs.REMOVED_COLLABORATOR, async (job, done) => {
       await updateRemovedCollaboratorCheckpoint(lastEventCheckpont);
     }
     done();
-    console.error("Error in job", jobs.REMOVED_COLLABORATOR, err.message);
   } catch (err) {
     await Reporter().alert(jobs.REMOVED_COLLABORATOR + "::" + err.message, err.stack);
+    console.error("Error in job", jobs.REMOVED_COLLABORATOR, err.message);
     done(err);
   } finally {
     console.log("Job done", jobs.REMOVED_COLLABORATOR);

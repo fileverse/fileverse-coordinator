@@ -29,9 +29,9 @@ agenda.define(jobs.ADDED_COLLABORATOR, async (job, done) => {
     if (lastEventCheckpont) {
       await updateAddedCollaboratorCheckpoint(lastEventCheckpont);
     }
-    await Reporter().alert(jobs.ADDED_COLLABORATOR + "::" + err.message, err.stack);
     done();
   } catch (err) {
+    await Reporter().alert(jobs.ADDED_COLLABORATOR + "::" + err.message, err.stack);
     console.error("Error in job", jobs.ADDED_COLLABORATOR, err.message);
     done(err);
   } finally {
