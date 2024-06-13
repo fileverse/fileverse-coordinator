@@ -31,9 +31,9 @@ agenda.define(jobs.REGISTERED_COLLABORATOR_KEY, async (job, done) => {
     if (lastEventCheckpont) {
       await updateRegisteredCollaboratorKeyCheckpoint(lastEventCheckpont);
     }
+    await Reporter().alert(jobs.REGISTERED_COLLABORATOR_KEY + "::" + err.message, err.stack);
     done();
   } catch (err) {
-    await Reporter().alert(jobs.REGISTERED_COLLABORATOR_KEY + "::" + err.message, err.stack);
     console.error("Error in job", jobs.REGISTERED_COLLABORATOR_KEY, err.message);
     done(err);
   } finally {

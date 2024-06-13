@@ -13,9 +13,9 @@ agenda.define(jobs.PROCESS, async (job, done) => {
     const events = await fetchEvents(minCheckpoint, FetchEventCount);
     console.log("Received entries", jobs.PROCESS, events.length);
     await processStoredEvents(events);
+    await Reporter().alert(jobs.PROCESS + "::" + err.message, err.stack);
     done();
   } catch (err) {
-    await Reporter().alert(jobs.PROCESS + "::" + err.message, err.stack);
     console.error("Error in job", jobs.PROCESS, err.message);
     done(err);
   } finally {
