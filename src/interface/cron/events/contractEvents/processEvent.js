@@ -1,5 +1,5 @@
-const Common = require("../../../domain/common");
-const Portal = require("../../../domain/portal");
+const Common = require("../../../../domain/common");
+const Portal = require("../../../../domain/portal");
 const createNotification = require("./createNotification");
 const completeNotificationAction = require("./completeNotificationAction");
 
@@ -183,18 +183,18 @@ async function processRemovedCollaboratorEvent({
 
 async function getNotificationTypeFromFileDataType(fileDataType, created = false) {
   if (fileDataType === 'dPage') {
-    return created ? 'dPagePublish': 'dPageEdit';
+    return created ? 'dPagePublish' : 'dPageEdit';
   }
   if (fileDataType === 'whiteboard') {
-    return created ? 'whiteboardPublish': 'whiteboardEdit';
+    return created ? 'whiteboardPublish' : 'whiteboardEdit';
   }
   if (fileDataType === 'dDoc') {
-    return created ? 'dDocPublish': 'dDocEdit';
+    return created ? 'dDocPublish' : 'dDocEdit';
   }
   if (fileDataType === 'file') {
-    return created ? 'addFile': 'editFile';
+    return created ? 'addFile' : 'editFile';
   }
-  return created ? 'addFile': 'editFile';
+  return created ? 'addFile' : 'editFile';
 }
 
 async function getFileTypeText(fileType) {
