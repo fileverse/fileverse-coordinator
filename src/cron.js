@@ -9,15 +9,6 @@ async function graceful() {
 }
 
 (async function () {
-  await agenda._collection.updateMany(
-    {
-      lockedAt: { $exists: true }
-    },
-    {
-      $set: { lockedAt: null }
-    }
-  );
-
   try {
     await agenda.start();
     require('./interface/cron/events/addedFiles');
