@@ -26,9 +26,9 @@ agenda.define(jobs.ADDED_FILE, async (job, done) => {
     if (lastEventCheckpont) {
       await updateAddedFilesCheckpoint(lastEventCheckpont);
     }
+    await Reporter().alert(jobs.ADDED_FILE + "::" + err.message, err.stack);
     done();
   } catch (err) {
-    await Reporter().alert(jobs.ADDED_FILE + "::" + err.message, err.stack);
     console.error("Error in job", jobs.ADDED_FILE, err.message);
     done(err);
   } finally {
