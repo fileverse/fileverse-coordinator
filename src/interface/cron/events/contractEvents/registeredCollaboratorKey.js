@@ -1,22 +1,20 @@
-const Reporter = require('../../../domain/reporter');
-const config = require("../../../../config");
-const constants = require("../../../constants");
-const { EventProcessor, Event } = require("../../../infra/database/models");
-const EventUtil = require("./utils");
-const agenda = require("../index");
-const jobs = require("../jobs");
+const Reporter = require('../../../../domain/reporter');
+const config = require("../../../../../config");
+const constants = require("../../../../constants");
+const { EventProcessor, Event } = require("../../../../infra/database/models");
+const EventUtil = require("../utils");
+const jobs = require("../../jobs");
 const axios = require("axios");
 
 const API_URL = config.SUBGRAPH_API;
 const EVENT_NAME = "registeredCollaboratorKeys";
 const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
-agenda.define(jobs.REGISTERED_COLLABORATOR_KEY, async (job, done) => {
-  let registeredCollaboratorKey = [];
+async function registeredCollaboratorKeyHandler() {
   try {
     const registeredCollaboratorKeyCheckpoint = await fetchRegisteredCollaboratorKeyCheckpoint();
     const batchSize = BATCH_SIZE;
-    registeredCollaboratorKey =
+    const registeredCollaboratorKey =
       await fetchRegisteredCollaboratorKeyEvents(
         registeredCollaboratorKeyCheckpoint,
         batchSize,
@@ -31,15 +29,14 @@ agenda.define(jobs.REGISTERED_COLLABORATOR_KEY, async (job, done) => {
     if (lastEventCheckpont) {
       await updateRegisteredCollaboratorKeyCheckpoint(lastEventCheckpont);
     }
-    done();
   } catch (err) {
     await Reporter().alert(jobs.REGISTERED_COLLABORATOR_KEY + "::" + err.message, err.stack);
     console.error("Error in job", jobs.REGISTERED_COLLABORATOR_KEY, err.message);
-    done(err);
   } finally {
     console.log("Job done", jobs.REGISTERED_COLLABORATOR_KEY);
   }
-});
+
+}
 
 async function fetchRegisteredCollaboratorKeyCheckpoint() {
   const eventProcessed = await EventProcessor.findOne({});
@@ -109,3 +106,5 @@ function updateRegisteredCollaboratorKeyCheckpoint(newCheckpoint) {
     { upsert: true }
   );
 }
+
+module.exports = registeredCollaboratorKeyHandler;

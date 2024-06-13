@@ -1,4 +1,4 @@
-const Notification = require('../../../domain/notification');
+const Notification = require('../../../../domain/notification');
 
 async function completeNotification({ portalAddress, forAddress, type }) {
     const complete = await Notification.markComplete({ portalAddress, forAddress, type });
