@@ -1,4 +1,4 @@
-const Notification = require('../../../domain/notification');
+const Notification = require('../../../../domain/notification');
 
 async function createNotification(data) {
     const createdNotification = await Notification.create(data);

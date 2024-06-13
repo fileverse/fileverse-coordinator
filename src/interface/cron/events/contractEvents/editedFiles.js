@@ -1,25 +1,22 @@
-const Reporter = require('../../../domain/reporter');
-const config = require("../../../../config");
-const constants = require("../../../constants");
+const Reporter = require('../../../../domain/reporter');
+const config = require("../../../../../config");
+const constants = require("../../../../constants");
 
-const { EventProcessor, Event } = require("../../../infra/database/models");
-const agenda = require("../index");
-const jobs = require("../jobs");
+const { EventProcessor, Event } = require("../../../../infra/database/models");
+const jobs = require("../../jobs");
 const axios = require("axios");
-const EventUtil = require("./utils");
+const EventUtil = require("../utils");
 
 
 const API_URL = config.SUBGRAPH_API;
 const EVENT_NAME = "editedFiles";
 const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
-
-agenda.define(jobs.EDITED_FILE, async (job, done) => {
-  let editedFiles = [];
+async function editedFilesHandler() {
   try {
     const editedFilesCheckpoint = await fetchEditedFilesCheckpoint();
     const batchSize = BATCH_SIZE;
-    editedFiles = await fetchEditedFilesEvents(
+    const editedFiles = await fetchEditedFilesEvents(
       editedFilesCheckpoint,
       batchSize
     );
@@ -29,15 +26,13 @@ agenda.define(jobs.EDITED_FILE, async (job, done) => {
     if (lastEventCheckpont) {
       await updateEditedFilesCheckpoint(lastEventCheckpont);
     }
-    done();
   } catch (err) {
     await Reporter().alert(jobs.EDITED_FILE + "::" + err.message, err.stack);
     console.error("Error in job", jobs.EDITED_FILE, err.message);
-    done(err);
   } finally {
     console.log("Job done", jobs.EDITED_FILE);
   }
-});
+}
 
 
 async function fetchEditedFilesCheckpoint() {
@@ -107,3 +102,5 @@ function updateEditedFilesCheckpoint(newCheckpoint) {
     { upsert: true }
   );
 }
+
+module.exports = editedFilesHandler;
