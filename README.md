@@ -1,3 +1,3 @@
 # Fileverse Coordinator
 
-Service to handle message passing from authorised UCANs
+A service that handles message passing for authorized UCANs
