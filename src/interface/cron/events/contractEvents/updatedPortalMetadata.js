@@ -1,9 +1,9 @@
-const config = require("../../../../config");
-const constants = require("../../../constants");
-const { EventProcessor, Event } = require("../../../infra/database/models");
-const EventUtil = require("./utils");
-const agenda = require("../index");
-const jobs = require("../jobs");
+const Reporter = require('../../../../domain/reporter');
+const config = require("../../../../../config");
+const constants = require("../../../../constants");
+const { EventProcessor, Event } = require("../../../../infra/database/models");
+const EventUtil = require("../utils");
+const jobs = require("../../jobs");
 const axios = require("axios");
 const processEvent = require('./processEvent');
 
@@ -11,13 +11,12 @@ const API_URL = config.SUBGRAPH_API;
 const EVENT_NAME = "updatedPortalDatas";
 const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
-agenda.define(jobs.UPDATED_PORTAL_METADATA, async (job, done) => {
-  let updatedPortalMetadatas = [];
+async function updatePortalMetadataHandler() {
   try {
     const updatedPortalMetadataCheckpoint =
       await fetchUpdatedPortalMetadataCheckpoint();
     const batchSize = BATCH_SIZE;
-    updatedPortalMetadatas = await fetchUpdatedPortalMetadataEvents(
+    const updatedPortalMetadatas = await fetchUpdatedPortalMetadataEvents(
       updatedPortalMetadataCheckpoint,
       batchSize,
     );
@@ -31,14 +30,13 @@ agenda.define(jobs.UPDATED_PORTAL_METADATA, async (job, done) => {
     if (lastEventCheckpont) {
       await updateUpdatedPortalMetadataCheckpoint(lastEventCheckpont);
     }
-    done();
   } catch (err) {
+    await Reporter().alert(jobs.UPDATED_PORTAL_METADATA + "::" + err.message, err.stack);
     console.error("Error in job", jobs.UPDATED_PORTAL_METADATA, err.message);
-    done(err);
   } finally {
     console.log("Job done", jobs.UPDATED_PORTAL_METADATA);
   }
-});
+}
 
 async function fetchUpdatedPortalMetadataCheckpoint() {
   const eventProcessed = await EventProcessor.findOne({});
@@ -106,3 +104,5 @@ function updateUpdatedPortalMetadataCheckpoint(newCheckpoint) {
     { upsert: true }
   );
 }
+
+module.exports = updatePortalMetadataHandler;

@@ -1,16 +1,16 @@
-const constants = require("../../../constants");
-const config = require("../../../../config");
-const { EventProcessor, Event } = require("../../../infra/database/models");
-const EventUtil = require("./utils");
-const agenda = require("../index");
-const jobs = require("../jobs");
+const Reporter = require('../../../../domain/reporter');
+const constants = require("../../../../constants");
+const config = require("../../../../../config");
+const { EventProcessor, Event } = require("../../../../infra/database/models");
+const EventUtil = require("../utils");
+const jobs = require("../../jobs");
 const axios = require("axios");
 
 const API_URL = config.SUBGRAPH_API;
 const EVENT_NAME = "addedCollaborators";
 const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
-agenda.define(jobs.ADDED_COLLABORATOR, async (job, done) => {
+async function addedCollaboratorHandler() {
   try {
     const addedCollaboratorCheckpoint = await fetchAddedCollaboratorCheckpoint();
     const batchSize = BATCH_SIZE;
@@ -28,14 +28,13 @@ agenda.define(jobs.ADDED_COLLABORATOR, async (job, done) => {
     if (lastEventCheckpont) {
       await updateAddedCollaboratorCheckpoint(lastEventCheckpont);
     }
-    done();
   } catch (err) {
+    await Reporter().alert(jobs.ADDED_COLLABORATOR + "::" + err.message, err.stack);
     console.error("Error in job", jobs.ADDED_COLLABORATOR, err.message);
-    done(err);
   } finally {
     console.log("Job done", jobs.ADDED_COLLABORATOR);
   }
-});
+}
 
 async function fetchAddedCollaboratorCheckpoint() {
   const eventProcessed = await EventProcessor.findOne({});
@@ -101,3 +100,5 @@ function updateAddedCollaboratorCheckpoint(newCheckpoint) {
     { upsert: true }
   );
 }
+
+module.exports = addedCollaboratorHandler;

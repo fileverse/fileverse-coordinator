@@ -1,18 +1,17 @@
-const config = require("../../../../config");
-const constants = require("../../../constants");
+const Reporter = require('../../../../domain/reporter');
+const config = require("../../../../../config");
+const constants = require("../../../../constants");
 
-const { EventProcessor, Event } = require("../../../infra/database/models");
-const agenda = require("../index");
-const jobs = require("../jobs");
+const { EventProcessor, Event } = require("../../../../infra/database/models");
+const jobs = require("../../jobs");
 const axios = require("axios");
-const EventUtil = require("./utils");
+const EventUtil = require("../utils");
 
 const API_URL = config.SUBGRAPH_API;
 const EVENT_NAME = "mints";
 const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
-agenda.define(jobs.MINT, async (job, done) => {
-  let mints = [];
+async function mintHandler() {
   try {
     const mintCheckpoint = await fetchMintCheckpoint();
     const batchSize = BATCH_SIZE;
@@ -23,14 +22,13 @@ agenda.define(jobs.MINT, async (job, done) => {
     if (lastEventCheckpont) {
       await updateMintCheckpoint(lastEventCheckpont);
     }
-    done();
   } catch (err) {
+    await Reporter().alert(jobs.MINT + "::" + err.message, err.stack);
     console.error("Error in job", jobs.MINT, err.message);
-    done(err);
   } finally {
     console.log("Job done", jobs.MINT);
   }
-});
+}
 
 async function fetchMintCheckpoint() {
   const eventProcessed = await EventProcessor.findOne({});
@@ -94,3 +92,5 @@ function updateMintCheckpoint(newCheckpoint) {
     { upsert: true }
   );
 }
+
+module.exports = mintHandler;

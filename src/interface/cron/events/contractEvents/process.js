@@ -1,12 +1,12 @@
-const { EventProcessor, Event } = require("../../../infra/database/models");
-const agenda = require("../index");
-const jobs = require("../jobs");
+const Reporter = require('../../../../domain/reporter');
+const { EventProcessor, Event } = require("../../../../infra/database/models");
+const jobs = require("../../jobs");
 const processEvent = require('./processEvent');
-const constants = require("../../../constants");
+const constants = require("../../../../constants");
 
 const FetchEventCount = constants.CRON.PROCESS_LIMIT;
 
-agenda.define(jobs.PROCESS, async (job, done) => {
+async function process() {
   try {
     const minCheckpoint = await fetchMinCheckpoint();
     const events = await fetchEvents(minCheckpoint, FetchEventCount);
@@ -14,12 +14,13 @@ agenda.define(jobs.PROCESS, async (job, done) => {
     await processStoredEvents(events);
     done();
   } catch (err) {
+    await Reporter().alert(jobs.PROCESS + "::" + err.message, err.stack);
     console.error("Error in job", jobs.PROCESS, err.message);
     done(err);
   } finally {
     console.log("Job done", jobs.PROCESS);
   }
-});
+}
 
 async function fetchMinCheckpoint() {
   const eventProcessed = await EventProcessor.findOne({});
@@ -62,3 +63,5 @@ async function processStoredEvents(events) {
   const data = await Promise.all(allPromises);
   return data;
 }
+
+module.exports = process;

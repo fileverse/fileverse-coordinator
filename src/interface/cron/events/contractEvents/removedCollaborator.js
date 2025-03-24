@@ -1,22 +1,22 @@
-const config = require("../../../../config");
-const constants = require("../../../constants");
-const { EventProcessor, Event } = require("../../../infra/database/models");
-const EventUtil = require("./utils");
-const agenda = require("../index");
-const jobs = require("../jobs");
+const Reporter = require('../../../../domain/reporter');
+const config = require("../../../../../config");
+const constants = require("../../../../constants");
+const { EventProcessor, Event } = require("../../../../infra/database/models");
+const EventUtil = require("../utils");
+const jobs = require("../../jobs");
 const axios = require("axios");
 
 const API_URL = config.SUBGRAPH_API;
 const EVENT_NAME = "removedCollaborators";
 const BATCH_SIZE = constants.CRON.BATCH_SIZE;
 
-agenda.define(jobs.REMOVED_COLLABORATOR, async (job, done) => {
-  let removedCollaborators = [];
+
+async function removedCollaboratorHandler() {
   try {
     const removedCollaboratorCheckpoint =
       await fetchRemovedCollaboratorCheckpoint();
     const batchSize = BATCH_SIZE;
-    removedCollaborators = await fetchRemovedCollaboratorEvents(
+    const removedCollaborators = await fetchRemovedCollaboratorEvents(
       removedCollaboratorCheckpoint,
       batchSize,
     );
@@ -30,14 +30,13 @@ agenda.define(jobs.REMOVED_COLLABORATOR, async (job, done) => {
     if (lastEventCheckpont) {
       await updateRemovedCollaboratorCheckpoint(lastEventCheckpont);
     }
-    done();
   } catch (err) {
+    await Reporter().alert(jobs.REMOVED_COLLABORATOR + "::" + err.message, err.stack);
     console.error("Error in job", jobs.REMOVED_COLLABORATOR, err.message);
-    done(err);
   } finally {
     console.log("Job done", jobs.REMOVED_COLLABORATOR);
   }
-});
+}
 
 async function fetchRemovedCollaboratorCheckpoint() {
   const eventProcessed = await EventProcessor.findOne({});
@@ -102,3 +101,5 @@ function updateRemovedCollaboratorCheckpoint(newCheckpoint) {
     { upsert: true }
   );
 }
+
+module.exports = removedCollaboratorHandler;

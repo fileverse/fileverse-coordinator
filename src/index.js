@@ -1,5 +1,6 @@
 const config = require('../config');
 const logger = require('./infra/logger');
+const Logger = require('./domain/reporter');
 
 const app = require('./app');
 

@@ -8,6 +8,7 @@ const jobs = {
   MINT: 'MINT',
   PROCESS: 'PROCESS',
   PORTAL_INDEX: 'PORTAL_INDEX',
+  CONTRACT_EVENTS: 'CONTRACT_EVENTS',
 };
 
 module.exports = jobs;
